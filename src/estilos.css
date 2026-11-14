@@ -856,11 +856,251 @@ input[type='range'] {
   flex: 1;
 }
 
-.diagrama-lienzo {
+.diagrama-cuerpo {
+  position: relative;
   flex: 1;
   min-height: 0;
+  container-type: inline-size;
+}
+
+@container (min-width: 700px) {
+  .diagrama-cuerpo.con-inspector .diagrama-lienzo {
+    right: 362px;
+  }
+}
+
+.diagrama-lienzo {
+  position: absolute;
+  inset: 0;
   padding: 10px;
   touch-action: none;
+}
+
+.diagrama-lienzo.editando .mt-nodo,
+.diagrama-lienzo.editando .mt-arista {
+  cursor: pointer;
+}
+
+.inspector {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(350px, calc(100% - 20px));
+  padding: 12px 14px 14px;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 2.5px solid var(--tinta);
+  border-radius: 12px;
+  box-shadow: var(--sombra);
+  scrollbar-width: thin;
+}
+
+.inspector-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.inspector-cabecera h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.inspector .tarjeta-titulo {
+  margin-bottom: 5px;
+}
+
+.inspector-error {
+  display: block;
+  cursor: default;
+}
+
+.aviso-diagrama {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: block;
+  max-width: 60%;
+  cursor: default;
+}
+
+.boton-mini {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: var(--panel);
+  border: 1.5px solid var(--tinta);
+  border-radius: 8px;
+}
+
+.boton-mini:hover {
+  background: var(--amarillo-suave);
+}
+
+.boton-mini.peligro:hover,
+.boton.peligro:hover:not(:disabled) {
+  background: var(--rojo-suave);
+}
+
+.boton.peligro {
+  color: #8f1f12;
+}
+
+.fila-nombre {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.fila-nombre label {
+  display: grid;
+  flex: 1;
+}
+
+.fila-nombre input {
+  min-width: 0;
+  padding: 6px 9px;
+  font-family: var(--mono);
+  font-size: 14px;
+  background: var(--panel-2);
+  border: 2px solid var(--tinta);
+  border-radius: 8px;
+}
+
+.mini-segmentos {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--panel);
+  border: 1.5px solid var(--tinta);
+  border-radius: 8px;
+}
+
+.mini-segmentos button {
+  padding: 3px 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+}
+
+.mini-segmentos button.activo {
+  background: var(--tinta);
+  color: var(--panel);
+}
+
+.roles {
+  display: flex;
+}
+
+.roles button {
+  flex: 1;
+}
+
+.lista-transiciones {
+  display: grid;
+  gap: 4px;
+}
+
+.fila-transicion {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px 4px 9px;
+  background: var(--panel-2);
+  border-radius: 8px;
+}
+
+.fila-transicion .transicion {
+  flex: 1;
+  font-size: 13px;
+}
+
+.formulario-transicion {
+  display: grid;
+  gap: 9px;
+  padding: 10px 11px;
+  background: var(--panel-2);
+  border: 2px dashed var(--tinta-suave);
+  border-radius: 10px;
+}
+
+.formulario-transicion .tarjeta-titulo {
+  margin: 0;
+}
+
+.delta-campos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 14px;
+}
+
+.delta-campos select,
+.selector-simbolo input {
+  padding: 3px 4px;
+  font-family: var(--mono);
+  font-size: 13px;
+  background: var(--panel);
+  border: 1.5px solid var(--tinta);
+  border-radius: 6px;
+}
+
+.selector-simbolo {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.selector-simbolo input {
+  width: 2.2em;
+  text-align: center;
+}
+
+.formulario-acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.eliminar-estado {
+  align-self: flex-start;
+}
+
+.diagrama-movimiento {
+  display: grid;
+  gap: 2px;
+  padding: 8px 14px 4px;
+  border-top: 2px dashed rgba(27, 27, 31, 0.2);
+  background: var(--panel);
+}
+
+.movimiento-texto {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 22px;
+  font-size: 14.5px;
+}
+
+.direccion {
+  margin-left: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #c2341b;
+}
+
+.diagrama-movimiento .cinta-plana {
+  padding: 16px 2px 18px;
 }
 
 .diagrama-lienzo svg {
@@ -923,6 +1163,9 @@ input[type='range'] {
 }
 
 .centrada {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
   padding: 18px;
   text-align: center;
 }

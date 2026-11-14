@@ -19,7 +19,12 @@ const ESTILO = `
 .mt-arista.implicita path { stroke-dasharray: 5 4; }
 .mt-arista text { font: 13px 'JetBrains Mono', Consolas, monospace; fill: #1b1b1f; paint-order: stroke; stroke: #fbf7ef; stroke-width: 4px; stroke-linejoin: round; }
 .mt-arista.activa path { stroke: #e8492c; stroke-width: 3; }
-.mt-arista.activa text { fill: #c2341b; font-weight: 700; }
+.mt-arista text.linea-activa { fill: #c2341b; font-weight: 700; }
+.mt-arista.seleccionada path { stroke: #2a9d8f; stroke-width: 3; }
+.mt-arista.seleccionada text { fill: #1d6f66; font-weight: 700; }
+.mt-arista path.mt-zona { fill: none; stroke: transparent; stroke-width: 16; }
+.mt-nodo .halo { fill: none; stroke: #2a9d8f; stroke-width: 3; stroke-dasharray: 6 4; }
+.mt-ficha { fill: #ff6f4f; stroke: #1b1b1f; stroke-width: 2.5; }
 .mt-inicio { fill: none; stroke: #1b1b1f; stroke-width: 1.7; }
 `
 
@@ -96,7 +101,7 @@ function geometria(arista, posiciones, radios, curvada) {
   return { d: `M ${n(s.x)} ${n(s.y)} Q ${n(c.x)} ${n(c.y)} ${n(e.x)} ${n(e.y)}`, candidatos }
 }
 
-function bloqueEtiqueta(lineas, { punto, normal }) {
+function bloqueEtiqueta(lineas, { punto, normal }, destacada = -1) {
   const ancho = Math.max(...lineas.map((l) => [...l].length)) * ANCHO_CARACTER
   const alto = lineas.length * ALTO_LINEA
   let x
@@ -113,7 +118,7 @@ function bloqueEtiqueta(lineas, { punto, normal }) {
   }
   const x0 = ancla === 'start' ? x : ancla === 'end' ? x - ancho : x - ancho / 2
   const svg = lineas
-    .map((l, i) => `<text x="${n(x)}" y="${n(arriba + 11 + i * ALTO_LINEA)}" text-anchor="${ancla}">${escapar(l)}</text>`)
+    .map((l, i) => `<text x="${n(x)}" y="${n(arriba + 11 + i * ALTO_LINEA)}" text-anchor="${ancla}"${i === destacada ? ' class="linea-activa"' : ''}>${escapar(l)}</text>`)
     .join('')
   return { caja: { x0, y0: arriba, x1: x0 + ancho, y1: arriba + alto }, svg }
 }
@@ -136,25 +141,34 @@ export function limitesDiagrama(posiciones) {
   return { x, y, ancho: Math.max(...xs) + 110 - x, alto: Math.max(...ys) + 70 - y }
 }
 
-export function diagramaSVG(M, aristas, posiciones, { activo = null, aristaActiva = null, limites = null, fondo = false } = {}) {
+export function diagramaSVG(
+  M,
+  aristas,
+  posiciones,
+  { activo = null, transicionActiva = null, seleccion = null, movimiento = null, limites = null, fondo = false } = {},
+) {
   const radios = Object.fromEntries(M.Q.map((q) => [q, radioEstado(q)]))
   const claves = new Set(aristas.map((a) => `${a.desde}\u0000${a.hacia}`))
   const caja = limites ?? limitesDiagrama(posiciones)
   const circulos = M.Q.map((q) => ({ ...posiciones[q], r: radios[q] }))
+  const es = (a, desde, hacia) => a.desde === desde && a.hacia === hacia
 
   const trazos = aristas.map((a) => {
     const g = geometria(a, posiciones, radios, claves.has(`${a.hacia}\u0000${a.desde}`))
-    const activa = Boolean(aristaActiva) && aristaActiva.desde === a.desde && aristaActiva.hacia === a.hacia
-    const clase = ['mt-arista', a.hacia === M.qreject && 'hacia-rechazo', a.implicita && 'implicita', activa && 'activa']
+    const activa = Boolean(transicionActiva) && es(a, transicionActiva.q, transicionActiva.qj)
+    const seleccionada = seleccion?.tipo === 'arista' && es(a, seleccion.desde, seleccion.hacia)
+    const clase = ['mt-arista', a.hacia === M.qreject && 'hacia-rechazo', a.implicita && 'implicita', activa && 'activa', seleccionada && 'seleccionada']
       .filter(Boolean).join(' ')
     const marcador = activa ? 'mt-flecha-activa' : a.hacia === M.qreject ? 'mt-flecha-tenue' : 'mt-flecha'
-    return { arista: a, ...g, activa, clase, marcador }
+    const destacada = activa ? a.simbolos.findIndex((s) => s.includes(transicionActiva.a)) : -1
+    const datos = `data-desde="${escapar(a.desde)}" data-hacia="${escapar(a.hacia)}"`
+    return { arista: a, ...g, activa, clase, marcador, destacada, datos }
   })
 
   const ocupadas = trazos.filter((t) => t.lazo).map((t) => t.lazo)
   const orden = [...trazos].sort((a, b) => Boolean(b.lazo) - Boolean(a.lazo) || a.arista.etiquetas.length - b.arista.etiquetas.length)
   for (const t of orden) {
-    const opciones = t.candidatos.map((c) => bloqueEtiqueta(t.arista.etiquetas, c))
+    const opciones = t.candidatos.map((c) => bloqueEtiqueta(t.arista.etiquetas, c, t.destacada))
     const libre = opciones.find((o) => !circulos.some((c) => cruzaCirculo(o.caja, c)) && !ocupadas.some((x) => x !== t.lazo && cruzaRectangulos(o.caja, x)))
     t.etiqueta = libre ?? opciones[0]
     ocupadas.push(t.etiqueta.caja)
@@ -163,10 +177,17 @@ export function diagramaSVG(M, aristas, posiciones, { activo = null, aristaActiv
 
   const nodos = M.Q.map((q) => {
     const p = posiciones[q]
-    const clase = ['mt-nodo', q === M.qaccept && 'aceptacion', q === M.qreject && 'rechazo', q === activo && 'activo']
+    const seleccionado = seleccion?.tipo === 'estado' && seleccion.q === q
+    const clase = ['mt-nodo', q === M.qaccept && 'aceptacion', q === M.qreject && 'rechazo', q === activo && 'activo', seleccionado && 'seleccionado']
       .filter(Boolean).join(' ')
-    return `<g class="${clase}" data-estado="${escapar(q)}" transform="translate(${n(p.x)} ${n(p.y)})"><circle r="${n(radios[q])}"/>${etiquetaEstado(q)}</g>`
+    const halo = seleccionado ? `<circle class="halo" r="${n(radios[q] + 8)}"/>` : ''
+    return `<g class="${clase}" data-estado="${escapar(q)}" transform="translate(${n(p.x)} ${n(p.y)})">${halo}<circle r="${n(radios[q])}"/>${etiquetaEstado(q)}</g>`
   })
+
+  const recorrido = movimiento && trazos.find((t) => es(t.arista, movimiento.desde, movimiento.hacia))
+  const ficha = recorrido
+    ? `<circle class="mt-ficha" r="9" data-paso="${escapar(movimiento.clave)}"><animateMotion dur="${n(movimiento.duracion)}ms" fill="freeze" calcMode="spline" keyTimes="0;1" keySplines="0.45 0 0.25 1" path="${recorrido.d}"/><animate attributeName="opacity" values="1;1;0" keyTimes="0;0.85;1" dur="${n(movimiento.duracion)}ms" fill="freeze"/></circle>`
+    : ''
 
   const p0 = posiciones[M.q0]
   const r0 = radios[M.q0]
@@ -180,9 +201,10 @@ export function diagramaSVG(M, aristas, posiciones, { activo = null, aristaActiv
     `<defs>${flecha('mt-flecha', '#1b1b1f')}${flecha('mt-flecha-tenue', '#8d867a')}${flecha('mt-flecha-activa', '#e8492c')}</defs>`,
     fondo ? `<rect class="mt-fondo" x="${n(caja.x)}" y="${n(caja.y)}" width="${n(caja.ancho)}" height="${n(caja.alto)}"/>` : '',
     inicio,
-    ...trazos.map((t) => `<g class="${t.clase}"><path d="${t.d}" marker-end="url(#${t.marcador})"/></g>`),
-    ...trazos.map((t) => `<g class="${t.clase}">${t.etiqueta.svg}</g>`),
+    ...trazos.map((t) => `<g class="${t.clase}" ${t.datos}><path d="${t.d}" marker-end="url(#${t.marcador})"/><path class="mt-zona" d="${t.d}"/></g>`),
+    ...trazos.map((t) => `<g class="${t.clase}" ${t.datos}>${t.etiqueta.svg}</g>`),
     ...nodos,
+    ficha,
     '</svg>',
   ].join('')
 }

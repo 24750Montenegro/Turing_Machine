@@ -41,7 +41,7 @@ function crearRegistro(seccion) {
 export function analizarDefinicion(texto) {
   const r = crearRegistro('definicion')
   const def = { nombre: 'M', Q: null, Sigma: null, Gamma: null, q0: null, qaccept: null, qreject: null }
-  const lineas = {}
+  const lineas = { claves: {} }
 
   const asignar = (campo, valor, linea) => {
     if (def[campo] !== null && def[campo] !== valor) {
@@ -66,6 +66,7 @@ export function analizarDefinicion(texto) {
       lineas[campo] = linea
     } else if ((m = RE_DISTINGUIDO.exec(l))) {
       asignar(CAMPO_DISTINGUIDO[m[1]], normalizarEstado(m[2]), linea)
+      lineas.claves[CAMPO_DISTINGUIDO[m[1]]] = linea
     } else if ((m = RE_TUPLA.exec(l))) {
       const partes = m[2].split(',').map((s) => s.trim())
       const forma = partes.length === 7 && partes[0] === 'Q' &&
@@ -75,6 +76,7 @@ export function analizarDefinicion(texto) {
         continue
       }
       def.nombre = normalizarEstado(m[1])
+      lineas.tupla = linea
       asignar('q0', normalizarEstado(partes[4]), linea)
       asignar('qaccept', normalizarEstado(partes[5]), linea)
       asignar('qreject', normalizarEstado(partes[6]), linea)

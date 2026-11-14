@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { REGLAS, delta, esParada, simboloLeido } from '../services/maquina.js'
 import { explicarResultado } from '../services/exportador.js'
-import { BLANCO } from '../services/notacion.js'
+import CintaPlana, { inicioVentana } from './CintaPlana.jsx'
 import { Configuracion, Estado, NombreConfiguracion, Simbolo, Transicion } from './Notacion.jsx'
 import Icono from './Icono.jsx'
 
@@ -81,7 +81,7 @@ export default function Depurador({ ejecucion, indice, onIr, depuracion, previa,
         )}
       </div>
 
-      {depuracion && <CintaPlana C={C} anterior={anterior} escrita={escrita} />}
+      {depuracion && <TarjetaCinta C={C} anterior={anterior} escrita={escrita} />}
 
       {depuracion && (
         <div className="tarjeta">
@@ -133,30 +133,12 @@ export default function Depurador({ ejecucion, indice, onIr, depuracion, previa,
   )
 }
 
-function CintaPlana({ C, anterior, escrita }) {
-  const cinta = [...C.u, ...C.v]
-  const cabeza = C.u.length
-  const desde = Math.max(0, cabeza - 6)
-  const hasta = Math.max(cabeza + 6, cinta.length)
-  const previa = anterior ? [...anterior.u, ...anterior.v] : null
-  const celdas = []
-  for (let i = desde; i <= Math.min(hasta, desde + 13); i++) {
-    const s = cinta[i] ?? BLANCO
-    const antes = previa ? previa[i] ?? BLANCO : s
-    const cambio = i === escrita && antes !== s
-    celdas.push(
-      <div key={i} className={`celda ${i === cabeza ? 'bajo-cabeza' : ''} ${i === escrita ? 'escrita' : ''} ${cambio ? 'cambio' : ''}`}>
-        {i === cabeza && <span className="marca-cabeza" aria-hidden="true" />}
-        {cambio && <span className="antes"><Simbolo s={antes} /></span>}
-        <Simbolo s={s} />
-        <span className="posicion">{i}</span>
-      </div>,
-    )
-  }
+function TarjetaCinta(props) {
+  const desde = inicioVentana(props.C)
   return (
     <div className="tarjeta">
       <p className="tarjeta-titulo">Cinta {desde > 0 && <span className="nota">(desde la celda {desde})</span>}</p>
-      <div className="cinta-plana">{celdas}</div>
+      <CintaPlana {...props} />
     </div>
   )
 }

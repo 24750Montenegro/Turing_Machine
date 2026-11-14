@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { separarEspecificacion } from './services/parser.js'
 import { verificar } from './services/validador.js'
 import { LIMITE_PREDETERMINADO, simular } from './services/simulador.js'
-import { configuracionInicial, delta, esParada, simboloLeido } from './services/maquina.js'
+import { configuracionInicial } from './services/maquina.js'
 import { especificacionATexto, reporteATexto } from './services/exportador.js'
 import { descargarTexto, elegirArchivoTexto } from './utils/archivos.js'
 import { EJEMPLOS } from './ejemplos.js'
@@ -62,6 +62,10 @@ export default function App() {
   const [pestana, setPestana] = useState('maquina')
   const [aviso, setAviso] = useState(null)
   const [entradasVisibles, setEntradasVisibles] = useState(() => leer(ALMACEN_PANEL, true) !== false)
+  const [historial, setHistorial] = useState([])
+  const [versionDiagrama, setVersionDiagrama] = useState(0)
+  const [movimiento, setMovimiento] = useState(null)
+  const previo = useRef({ id: null, indice: -1 })
 
   useEffect(() => guardar(ALMACEN, textos), [textos])
   useEffect(() => guardar(ALMACEN_PANEL, entradasVisibles), [entradasVisibles])
@@ -141,6 +145,8 @@ export default function App() {
 
   const reemplazarTodo = (texto, mensaje) => {
     setTextos(separarEspecificacion(texto))
+    setHistorial([])
+    setVersionDiagrama((v) => v + 1)
     setEjecucion(null)
     setReproduciendo(false)
     setIndice(0)
@@ -167,6 +173,18 @@ export default function App() {
   const exportarResultado = () => {
     if (!ejecucion) return
     descargarTexto(`configuraciones-${ejecucion.verificacion.maquina.nombre}.txt`, reporteATexto(ejecucion.verificacion, ejecucion.simulacion))
+  }
+
+  const editarDesdeDiagrama = (nuevos) => {
+    setHistorial((h) => [...h.slice(-49), textos])
+    setTextos(nuevos)
+  }
+
+  const deshacer = () => {
+    const anterior = historial.at(-1)
+    if (!anterior) return
+    setHistorial(historial.slice(0, -1))
+    setTextos(anterior)
   }
 
   const actualizar = (seccion) => (valor) => setTextos((t) => ({ ...t, [seccion]: valor }))
@@ -198,7 +216,20 @@ export default function App() {
   }, [C, ejecucion, sim, indice, situacion, terminado, total, depuracion, ms])
 
   const enSimulacion = Boolean(sim) && !desactualizada
-  const proxima = enSimulacion && !esParada(maquinaActual, C.q) ? delta(maquinaActual, C.q, simboloLeido(C)) : null
+  const aplicada = enSimulacion && indice > 0 ? pasoActual.transicion : null
+  const anterior = enSimulacion && indice > 0 ? sim.pasos[indice - 1].configuracion : null
+  const paso = enSimulacion ? { indice, C, anterior, escrita: anterior?.u.length ?? null, transicion: aplicada } : null
+
+  useEffect(() => {
+    const p = previo.current
+    previo.current = { id: ejecucion?.id, indice }
+    const consecutivo = Boolean(sim) && p.id === ejecucion.id && p.indice === indice - 1
+    setMovimiento(
+      consecutivo && cuadro?.duracion > 0
+        ? { desde: sim.pasos[indice].transicion.q, hacia: sim.pasos[indice].transicion.qj, duracion: cuadro.duracion, clave: `${ejecucion.id}-${indice}`, t0: performance.now() }
+        : null,
+    )
+  }, [ejecucion?.id, indice])
 
   return (
     <div className="app">
@@ -296,12 +327,26 @@ export default function App() {
                 <div className="capa visible">
                   {maquinaActual ? (
                     <DiagramaEstados
+                      key={versionDiagrama}
                       maquina={maquinaActual}
+                      textos={textos}
+                      onEditar={editarDesdeDiagrama}
+                      puedeDeshacer={historial.length > 0}
+                      onDeshacer={deshacer}
                       activo={enSimulacion ? C.q : null}
-                      aristaActiva={proxima ? { desde: proxima.q, hacia: proxima.qj } : null}
+                      transicionActiva={aplicada}
+                      movimiento={enSimulacion ? movimiento : null}
+                      paso={paso}
                     />
                   ) : (
-                    <p className="nota centrada">Corrige la especificación para ver el diagrama.</p>
+                    <div className="nota centrada">
+                      <p>Corrige la especificación para ver el diagrama.</p>
+                      {historial.length > 0 && (
+                        <button className="boton boton-chico" onClick={deshacer}>
+                          <Icono nombre="deshacer" tamano={16} /> Deshacer el último cambio del diagrama
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               )}

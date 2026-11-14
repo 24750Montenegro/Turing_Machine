@@ -29,6 +29,8 @@ En la aplicación, los componentes (la "gramática"), las transiciones y la entr
 - **Modo depuración:** avanza configuración por configuración (← →, espacio). Muestra Cᵢ, el desglose u / q / v, la cinta, la transición que se aplicará y la regla de "produce" que corresponde.
 - **Modo rápido:** ejecuta todo de corrido y muestra el resultado.
 - Vistas de la cámara: 3D, planta (el recuadro con el triángulo que apunta al carácter leído) y frontal.
+- **Diagrama de estados:** durante la simulación una ficha recorre la transición aplicada, se resalta la línea de la etiqueta usada y abajo se ven la configuración y la cinta.
+- **Edición visual:** con *Editar* se agregan, renombran o eliminan estados, se asignan los papeles de q₀, qaccept y qreject y se agregan, editan o eliminan transiciones δ(qᵢ, b) = (qⱼ, c, L | R). Cada cambio se escribe en la configuración, conservando los comentarios, y se puede deshacer.
 
 ## Formato del archivo
 
@@ -73,6 +75,7 @@ src/
     ciclos.js        detección de ciclos sobre la secuencia ya producida
     exportador.js    salida .txt con las configuraciones
     diagrama.js      etiquetas de las aristas en notación de clase
+    edicion.js       cambios hechos desde el diagrama, aplicados al texto de la configuración
   diagrama/          distribución y dibujo SVG del diagrama de estados
   escena/            máquina 3D (three.js, cel shading)
   components/        interfaz en React
