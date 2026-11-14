@@ -206,57 +206,71 @@ export default function App() {
         onCargar={cargarEspecificacion}
         onEjemplo={(e) => reemplazarTodo(e.texto, `Ejemplo cargado: ${e.titulo}`)}
         onGuardar={() => descargarTexto('especificacion.txt', especificacionATexto(textos))}
-        entradasVisibles={entradasVisibles}
-        onAlternarEntradas={() => setEntradasVisibles((v) => !v)}
-        errores={verificacion.errores.length}
       />
 
       <main className={`principal ${entradasVisibles ? '' : 'sin-entradas'}`}>
-        <div className="columna columna-entradas" hidden={!entradasVisibles}>
-          <EditorSeccion
-            titulo="Gramática · componentes"
-            formula="M = (Q, Σ, Γ, δ, q₀, qaccept, qreject)"
-            valor={textos.definicion}
-            onCambio={actualizar('definicion')}
-            onImportar={() => importarSeccion('definicion')}
-            {...mensajes('definicion')}
-            filas={7}
-            placeholder={PLANTILLA_COMPONENTES}
-            atajos={[
-              { etiqueta: 'Σ', texto: 'Σ' },
-              { etiqueta: 'Γ', texto: 'Γ' },
-              { etiqueta: 'δ', texto: 'δ' },
-              { etiqueta: '⊔', texto: '⊔' },
-              { etiqueta: 'plantilla', titulo: 'Reemplazar por una plantilla', accion: () => actualizar('definicion')(PLANTILLA_COMPONENTES) },
-            ]}
-          />
-          <EditorSeccion
-            titulo="Transiciones"
-            formula="δ: Q × Γ → Q × Γ × {L, R}"
-            valor={textos.transiciones}
-            onCambio={actualizar('transiciones')}
-            onImportar={() => importarSeccion('transiciones')}
-            {...mensajes('transiciones')}
-            filas={11}
-            placeholder={'δ(q1, 0) = (q1, 0, R)\nδ(q1, ⊔) = (qaccept, ⊔, R)'}
-            atajos={[
-              { etiqueta: 'δ', texto: 'δ' },
-              { etiqueta: '⊔', texto: '⊔' },
-              { etiqueta: '+ δ(q, a) = (q, b, R)', texto: 'δ(q1, 0) = (q1, 0, R)\n', titulo: 'Insertar una transición' },
-            ]}
-          />
-          <EditorSeccion
-            titulo="Entrada"
-            formula="w ∈ Σ*"
-            valor={textos.entrada}
-            onCambio={actualizar('entrada')}
-            onImportar={() => importarSeccion('entrada')}
-            {...mensajes('entrada')}
-            filas={2}
-            placeholder="w = 0011"
-            atajos={[{ etiqueta: 'ε', titulo: 'Cadena vacía', accion: () => actualizar('entrada')('w = ε') }]}
-          />
-          <PanelVerificacion comprobaciones={verificacion.comprobaciones} valida={verificacion.valida} />
+        <div className="lateral">
+          <div className="columna columna-entradas" id="panel-configuracion" hidden={!entradasVisibles}>
+            <EditorSeccion
+              titulo="Gramática · componentes"
+              formula="M = (Q, Σ, Γ, δ, q₀, qaccept, qreject)"
+              valor={textos.definicion}
+              onCambio={actualizar('definicion')}
+              onImportar={() => importarSeccion('definicion')}
+              {...mensajes('definicion')}
+              filas={7}
+              placeholder={PLANTILLA_COMPONENTES}
+              atajos={[
+                { etiqueta: 'Σ', texto: 'Σ' },
+                { etiqueta: 'Γ', texto: 'Γ' },
+                { etiqueta: 'δ', texto: 'δ' },
+                { etiqueta: '⊔', texto: '⊔' },
+                { etiqueta: 'plantilla', titulo: 'Reemplazar por una plantilla', accion: () => actualizar('definicion')(PLANTILLA_COMPONENTES) },
+              ]}
+            />
+            <EditorSeccion
+              titulo="Transiciones"
+              formula="δ: Q × Γ → Q × Γ × {L, R}"
+              valor={textos.transiciones}
+              onCambio={actualizar('transiciones')}
+              onImportar={() => importarSeccion('transiciones')}
+              {...mensajes('transiciones')}
+              filas={11}
+              placeholder={'δ(q1, 0) = (q1, 0, R)\nδ(q1, ⊔) = (qaccept, ⊔, R)'}
+              atajos={[
+                { etiqueta: 'δ', texto: 'δ' },
+                { etiqueta: '⊔', texto: '⊔' },
+                { etiqueta: '+ δ(q, a) = (q, b, R)', texto: 'δ(q1, 0) = (q1, 0, R)\n', titulo: 'Insertar una transición' },
+              ]}
+            />
+            <EditorSeccion
+              titulo="Entrada"
+              formula="w ∈ Σ*"
+              valor={textos.entrada}
+              onCambio={actualizar('entrada')}
+              onImportar={() => importarSeccion('entrada')}
+              {...mensajes('entrada')}
+              filas={2}
+              placeholder="w = 0011"
+              atajos={[{ etiqueta: 'ε', titulo: 'Cadena vacía', accion: () => actualizar('entrada')('w = ε') }]}
+            />
+            <PanelVerificacion comprobaciones={verificacion.comprobaciones} valida={verificacion.valida} />
+          </div>
+          <button
+            className="riel"
+            onClick={() => setEntradasVisibles((v) => !v)}
+            aria-expanded={entradasVisibles}
+            aria-controls="panel-configuracion"
+            aria-label={entradasVisibles ? 'Ocultar configuración' : 'Mostrar configuración'}
+            title={entradasVisibles ? 'Ocultar configuración' : 'Mostrar configuración'}
+          >
+            <Icono nombre={entradasVisibles ? 'izquierda' : 'derecha'} tamano={16} />
+            {!entradasVisibles && verificacion.errores.length > 0 && (
+              <span className="riel-errores" title={`${verificacion.errores.length} errores en la especificación`}>
+                {verificacion.errores.length}
+              </span>
+            )}
+          </button>
         </div>
 
         <div className="columna columna-central">

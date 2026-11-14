@@ -266,26 +266,62 @@ p {
 
 .principal {
   display: grid;
-  grid-template-columns: minmax(330px, 390px) minmax(0, 1fr) minmax(330px, 400px);
+  grid-template-columns: minmax(352px, 414px) minmax(0, 1fr) minmax(330px, 400px);
   gap: 18px;
   padding: 18px;
   min-height: 0;
 }
 
 .principal.sin-entradas {
-  grid-template-columns: minmax(0, 1fr) minmax(330px, 420px);
+  grid-template-columns: auto minmax(0, 1fr) minmax(330px, 420px);
 }
 
-.insignia-errores {
+.lateral {
+  display: flex;
+  gap: 6px;
+  min-height: 0;
+  min-width: 0;
+}
+
+.riel {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  padding: 0;
+  color: var(--tinta-suave);
+  background: var(--panel-2);
+  border: 2px solid var(--tinta);
+  border-radius: 9px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.riel:hover {
+  background: var(--amarillo);
+  color: var(--tinta);
+}
+
+.riel .icono {
+  stroke-width: 3;
+}
+
+.riel-errores {
+  position: absolute;
+  top: 10px;
+  left: 50%;
   display: grid;
   place-items: center;
   min-width: 20px;
   height: 20px;
-  padding: 0 5px;
-  font-size: 12px;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 700;
   color: #fff;
   background: var(--rojo);
+  border: 2px solid var(--tinta);
   border-radius: 999px;
+  transform: translateX(-50%);
 }
 
 .columna {
@@ -297,9 +333,12 @@ p {
 }
 
 .columna-entradas {
+  flex: 1;
   overflow-y: auto;
   padding: 2px 8px 8px 2px;
-  margin: -2px -8px -8px -2px;
+  margin: -2px 0 -8px -2px;
+  scrollbar-width: thin;
+  scrollbar-color: #b9ae99 transparent;
 }
 
 .panel {
@@ -1214,11 +1253,11 @@ input[type='range'] {
   }
 
   .principal {
-    grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+    grid-template-columns: minmax(342px, 404px) minmax(0, 1fr);
   }
 
   .principal.sin-entradas {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
   }
 
   .columna-entradas {
@@ -1248,9 +1287,30 @@ input[type='range'] {
 }
 
 @media (max-width: 900px) {
-  .principal {
+  .principal,
+  .principal.sin-entradas {
     grid-template-columns: minmax(0, 1fr);
     padding: 14px;
+  }
+
+  .lateral {
+    flex-direction: column;
+  }
+
+  .riel {
+    width: 100%;
+    height: 22px;
+  }
+
+  .riel .icono {
+    transform: rotate(90deg);
+  }
+
+  .riel-errores {
+    top: 50%;
+    left: auto;
+    right: 12px;
+    transform: translateY(-50%);
   }
 
   .encabezado {

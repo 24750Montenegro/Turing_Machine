@@ -25,8 +25,8 @@ const TRAZOS = {
   aviso: <path d="M12 4l9 16H3zM12 10v4M12 17v.5" />,
   ciclo: <path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4" />,
   reacomodar: <path d="M4 4h6v6H4zM14 14h6v6h-6zM10 7h4a3 3 0 0 1 3 3v4M7 10v4a3 3 0 0 0 3 3h4" />,
-  panelCerrar: <path d="M4 4h16v16H4zM9 4v16M16 9l-3 3 3 3" />,
-  panelAbrir: <path d="M4 4h16v16H4zM9 4v16M13 9l3 3-3 3" />,
+  izquierda: <path d="M15 6l-6 6 6 6" />,
+  derecha: <path d="M9 6l6 6-6 6" />,
 }
 
 export default function Icono({ nombre, tamano = 18 }) {
