@@ -55,7 +55,7 @@ function rectanguloRedondeado(ctx, x, y, w, h, r) {
   ctx.roundRect(x, y, w, h, r)
 }
 
-export function dibujarEstado(c, estado) {
+export function dibujarEstado(c, estado, rotulo = '') {
   const ctx = c.getContext('2d')
   ctx.clearRect(0, 0, c.width, c.height)
   rectanguloRedondeado(ctx, 6, 6, c.width - 12, c.height - 12, 34)
@@ -64,6 +64,13 @@ export function dibujarEstado(c, estado) {
   ctx.lineWidth = 10
   ctx.strokeStyle = '#1b1b1f'
   ctx.stroke()
+  if (rotulo) {
+    ctx.fillStyle = '#a0957f'
+    ctx.font = `700 24px "Space Grotesk", ${FUENTE_MONO}`
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'top'
+    ctx.fillText(rotulo, 30, 24)
+  }
   if (!estado) return
   const { base, sub } = partesEstado(estado)
   ctx.fillStyle = '#1b1b1f'
@@ -75,7 +82,8 @@ export function dibujarEstado(c, estado) {
   const escala = Math.min(1, (c.width - 70) / (anchoBase + anchoSub + 6))
   const x = (c.width - (anchoBase + anchoSub + 6) * escala) / 2
   ctx.save()
-  ctx.translate(x, c.height / 2 + 34 * escala)
+  ctx.textAlign = 'left'
+  ctx.translate(x, c.height / 2 + 34 * escala + (rotulo ? 10 : 0))
   ctx.scale(escala, escala)
   ctx.font = `italic 120px ${FUENTE_MATE}`
   ctx.fillText(base, 0, 0)
