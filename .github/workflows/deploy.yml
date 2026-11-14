@@ -1,8 +1,9 @@
-name: Desplegar en GitHub Pages
+name: CI y GitHub Pages
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -11,7 +12,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -26,17 +27,19 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
-      - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
+        if: github.event_name != 'pull_request'
         with:
           path: dist
 
   desplegar:
     needs: compilar
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.despliegue.outputs.page_url }}
     steps:
+      - uses: actions/configure-pages@v5
       - id: despliegue
         uses: actions/deploy-pages@v4

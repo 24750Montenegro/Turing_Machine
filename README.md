@@ -108,7 +108,12 @@ Si ninguna se cumple antes del límite, el resultado es "sin resultado".
 
 ## Despliegue en GitHub Pages
 
-El flujo `.github/workflows/deploy.yml` corre las pruebas, compila con Vite y publica `dist/` en cada push a `main`. Hay que activar *Settings → Pages → Source: GitHub Actions* en el repositorio. Vite usa `base: './'`, así que funciona con cualquier nombre de repositorio.
+El flujo `.github/workflows/deploy.yml` instala dependencias con `npm ci`, corre las pruebas y compila con Vite:
+
+- en cada push a `main` (o al ejecutarlo a mano desde *Actions*) publica `dist/` directamente en GitHub Pages;
+- en los pull requests solo verifica que las pruebas y la compilación pasen.
+
+La primera vez hay que elegir *Settings → Pages → Source: GitHub Actions* en el repositorio; GitHub no permite activarlo desde el flujo con el token por defecto. Vite usa `base: './'`, así que funciona con cualquier nombre de repositorio.
 
 ## Bibliografía
 
