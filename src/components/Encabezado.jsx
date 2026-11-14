@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { EJEMPLOS } from '../ejemplos.js'
 import Icono from './Icono.jsx'
 
-export default function Encabezado({ onCargar, onEjemplo, onGuardar }) {
+export default function Encabezado({ onCargar, onEjemplo, onGuardar, entradasVisibles, onAlternarEntradas, errores }) {
   const [abierto, setAbierto] = useState(false)
   const menu = useRef(null)
 
@@ -23,6 +23,16 @@ export default function Encabezado({ onCargar, onEjemplo, onGuardar }) {
         </div>
       </div>
       <nav className="acciones">
+        <button
+          className="boton"
+          onClick={onAlternarEntradas}
+          aria-pressed={!entradasVisibles}
+          title={entradasVisibles ? 'Ocultar el panel de configuración' : 'Mostrar el panel de configuración'}
+        >
+          <Icono nombre={entradasVisibles ? 'panelCerrar' : 'panelAbrir'} />
+          {entradasVisibles ? 'Ocultar configuración' : 'Mostrar configuración'}
+          {!entradasVisibles && errores > 0 && <span className="insignia-errores">{errores}</span>}
+        </button>
         <button className="boton" onClick={onCargar} title="Cargar un .txt con componentes, transiciones y w">
           <Icono nombre="subir" /> Cargar especificación
         </button>

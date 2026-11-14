@@ -30,6 +30,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html,
 body,
 #root {
@@ -266,6 +270,22 @@ p {
   gap: 18px;
   padding: 18px;
   min-height: 0;
+}
+
+.principal.sin-entradas {
+  grid-template-columns: minmax(0, 1fr) minmax(330px, 420px);
+}
+
+.insignia-errores {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  font-size: 12px;
+  color: #fff;
+  background: var(--rojo);
+  border-radius: 999px;
 }
 
 .columna {
@@ -1195,6 +1215,10 @@ input[type='range'] {
 
   .principal {
     grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  }
+
+  .principal.sin-entradas {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .columna-entradas {

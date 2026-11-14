@@ -16,24 +16,28 @@ import Depurador from './components/Depurador.jsx'
 import Icono from './components/Icono.jsx'
 
 const ALMACEN = 'maquina-turing:especificacion'
+const ALMACEN_PANEL = 'maquina-turing:entradas-visibles'
 
 const PANTALLA = { acepta: 'ACEPTA', rechaza: 'RECHAZA', ciclo: 'CICLO ∞', limite: 'SIN PARAR' }
 
 const PLANTILLA_COMPONENTES = 'M = (Q, Σ, Γ, δ, q1, qaccept, qreject)\nQ = {q1, qaccept, qreject}\nΣ = {0, 1}\nΓ = {0, 1, ⊔}'
 
 function textosIniciales() {
-  const inicial = separarEspecificacion(EJEMPLOS[0].texto)
+  const guardado = leer(ALMACEN, null)
+  return typeof guardado?.definicion === 'string' ? guardado : separarEspecificacion(EJEMPLOS[0].texto)
+}
+
+function leer(clave, predeterminado) {
   try {
-    const guardado = JSON.parse(localStorage.getItem(ALMACEN))
-    return typeof guardado?.definicion === 'string' ? guardado : inicial
+    return JSON.parse(localStorage.getItem(clave)) ?? predeterminado
   } catch {
-    return inicial
+    return predeterminado
   }
 }
 
-function guardarTextos(textos) {
+function guardar(clave, valor) {
   try {
-    localStorage.setItem(ALMACEN, JSON.stringify(textos))
+    localStorage.setItem(clave, JSON.stringify(valor))
   } catch {
     return
   }
@@ -57,8 +61,10 @@ export default function App() {
   const [vista, setVista] = useState('3d')
   const [pestana, setPestana] = useState('maquina')
   const [aviso, setAviso] = useState(null)
+  const [entradasVisibles, setEntradasVisibles] = useState(() => leer(ALMACEN_PANEL, true) !== false)
 
-  useEffect(() => guardarTextos(textos), [textos])
+  useEffect(() => guardar(ALMACEN, textos), [textos])
+  useEffect(() => guardar(ALMACEN_PANEL, entradasVisibles), [entradasVisibles])
 
   useEffect(() => {
     if (!aviso) return
@@ -187,7 +193,7 @@ export default function App() {
       situacion,
       pantalla: !sim ? 'LISTO' : terminado ? PANTALLA[sim.resultado] : `PASO ${indice}/${total}`,
       escritura: sim && indice > 0 ? sim.pasos[indice - 1].configuracion.u.length : null,
-      duracion: !sim ? 0 : depuracion ? Math.min(900, ms * 0.9) : ms * 0.95,
+      duracion: !sim ? 0 : depuracion ? Math.min(1500, ms * 0.9) : ms * 0.95,
     }
   }, [C, ejecucion, sim, indice, situacion, terminado, total, depuracion, ms])
 
@@ -200,10 +206,13 @@ export default function App() {
         onCargar={cargarEspecificacion}
         onEjemplo={(e) => reemplazarTodo(e.texto, `Ejemplo cargado: ${e.titulo}`)}
         onGuardar={() => descargarTexto('especificacion.txt', especificacionATexto(textos))}
+        entradasVisibles={entradasVisibles}
+        onAlternarEntradas={() => setEntradasVisibles((v) => !v)}
+        errores={verificacion.errores.length}
       />
 
-      <main className="principal">
-        <div className="columna columna-entradas">
+      <main className={`principal ${entradasVisibles ? '' : 'sin-entradas'}`}>
+        <div className="columna columna-entradas" hidden={!entradasVisibles}>
           <EditorSeccion
             titulo="Gramática · componentes"
             formula="M = (Q, Σ, Γ, δ, q₀, qaccept, qreject)"
