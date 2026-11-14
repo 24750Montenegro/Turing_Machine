@@ -1,0 +1,50 @@
+// Inciso b) Máquina con estado de aceptación, estado de rechazo y ciclo infinito.
+// L(M) = {0ⁿ1ⁿ | n ≥ 1}. Si w empieza con 1, M va y viene sobre la cinta sin detenerse.
+// Esta entrada llega a qreject (hay más 0 que 1).
+
+M = (Q, Σ, Γ, δ, q1, qaccept, qreject)
+Q = {q1, q2, q3, q4, q5, q6, qaccept, qreject}
+Σ = {0, 1}
+Γ = {0, 1, x, y, ⊔}
+
+// q1: marca con x el 0 más a la izquierda
+δ(q1, 0) = (q2, x, R)
+δ(q1, 1) = (q5, x, R)
+δ(q1, x) = (qreject, x, R)
+δ(q1, y) = (q4, y, R)
+δ(q1, ⊔) = (qreject, ⊔, R)
+
+// q2: busca a la derecha el primer 1 y lo marca con y
+δ(q2, 0) = (q2, 0, R)
+δ(q2, 1) = (q3, y, L)
+δ(q2, x) = (qreject, x, R)
+δ(q2, y) = (q2, y, R)
+δ(q2, ⊔) = (qreject, ⊔, R)
+
+// q3: regresa a la última x
+δ(q3, 0) = (q3, 0, L)
+δ(q3, 1) = (qreject, 1, R)
+δ(q3, x) = (q1, x, R)
+δ(q3, y) = (q3, y, L)
+δ(q3, ⊔) = (qreject, ⊔, R)
+
+// q4: ya no quedan 0 sin marcar; verifica que solo queden y
+δ(q4, 0) = (qreject, 0, R)
+δ(q4, 1) = (qreject, 1, R)
+δ(q4, x) = (qreject, x, R)
+δ(q4, y) = (q4, y, R)
+δ(q4, ⊔) = (qaccept, ⊔, R)
+
+// q5 y q6: w empezó con 1; ida hasta ⊔ y vuelta hasta x, para siempre
+δ(q5, 0) = (q5, 0, R)
+δ(q5, 1) = (q5, 1, R)
+δ(q5, x) = (qreject, x, R)
+δ(q5, y) = (qreject, y, R)
+δ(q5, ⊔) = (q6, ⊔, L)
+δ(q6, 0) = (q6, 0, L)
+δ(q6, 1) = (q6, 1, L)
+δ(q6, x) = (q5, x, R)
+δ(q6, y) = (qreject, y, R)
+δ(q6, ⊔) = (qreject, ⊔, R)
+
+w = 00011

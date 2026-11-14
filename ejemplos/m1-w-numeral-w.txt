@@ -1,0 +1,63 @@
+// Ejemplo de clase: M1 decide B = {w#w | w ∈ {0,1}*} (figura 2).
+// Como en el diagrama, las transiciones que no aparecen van a qreject.
+// δ(q1, #) pasa por q14 para verificar que el lado derecho también esté vacío.
+
+M1 = (Q, Σ, Γ, δ, q1, qaccept, qreject)
+Q = {q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, qaccept, qreject}
+Σ = {0, 1, #}
+Γ = {0, 1, #, x, ⊔}
+
+δ(q1, 0) = (q2, ⊔, R)
+δ(q1, 1) = (q3, ⊔, R)
+δ(q1, #) = (q14, #, R)
+
+δ(q2, 0) = (q2, 0, R)
+δ(q2, 1) = (q2, 1, R)
+δ(q2, #) = (q4, #, R)
+δ(q3, 0) = (q3, 0, R)
+δ(q3, 1) = (q3, 1, R)
+δ(q3, #) = (q5, #, R)
+
+δ(q4, 0) = (q4, 0, R)
+δ(q4, 1) = (q4, 1, R)
+δ(q4, ⊔) = (q6, ⊔, L)
+δ(q5, 0) = (q5, 0, R)
+δ(q5, 1) = (q5, 1, R)
+δ(q5, ⊔) = (q7, ⊔, L)
+
+δ(q6, 0) = (q6, 0, L)
+δ(q6, 1) = (q6, 1, L)
+δ(q6, #) = (q6, #, L)
+δ(q6, ⊔) = (q8, ⊔, R)
+δ(q7, 0) = (q7, 0, L)
+δ(q7, 1) = (q7, 1, L)
+δ(q7, #) = (q7, #, L)
+δ(q7, ⊔) = (q9, ⊔, R)
+
+δ(q8, 0) = (q8, 0, R)
+δ(q8, 1) = (q8, 1, R)
+δ(q8, #) = (q10, #, R)
+δ(q9, 0) = (q9, 0, R)
+δ(q9, 1) = (q9, 1, R)
+δ(q9, #) = (q11, #, R)
+
+δ(q10, x) = (q10, x, R)
+δ(q10, 0) = (q12, x, L)
+δ(q11, x) = (q11, x, R)
+δ(q11, 1) = (q12, x, L)
+
+δ(q12, 0) = (q12, 0, L)
+δ(q12, 1) = (q12, 1, L)
+δ(q12, x) = (q12, x, L)
+δ(q12, #) = (q12, #, L)
+δ(q12, ⊔) = (q13, ⊔, R)
+
+δ(q13, x) = (q13, x, R)
+δ(q13, 0) = (q8, x, R)
+δ(q13, 1) = (q9, x, R)
+δ(q13, #) = (q14, #, R)
+
+δ(q14, x) = (q14, x, R)
+δ(q14, ⊔) = (qaccept, ⊔, R)
+
+w = 01#01

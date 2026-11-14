@@ -1,0 +1,152 @@
+SIMULACIÓN DE UNA MÁQUINA DE TURING DETERMINISTA
+================================================
+Generado: 14/11/2026, 1:44:10 p. m.
+
+
+1. Especificación
+-----------------
+M₁ = (Q, Σ, Γ, δ, q₁, qaccept, qreject)
+Q = {q₁, q₂, q₃, q₄, q₅, q₆, q₇, q₈, q₉, q₁₀, q₁₁, q₁₂, q₁₃, q₁₄, qaccept, qreject}
+Σ = {0, 1, #}
+Γ = {0, 1, #, x, ⊔}
+
+δ(q₁, 0) = (q₂, ⊔, R)
+δ(q₁, 1) = (q₃, ⊔, R)
+δ(q₁, #) = (q₁₄, #, R)
+δ(q₂, 0) = (q₂, 0, R)
+δ(q₂, 1) = (q₂, 1, R)
+δ(q₂, #) = (q₄, #, R)
+δ(q₃, 0) = (q₃, 0, R)
+δ(q₃, 1) = (q₃, 1, R)
+δ(q₃, #) = (q₅, #, R)
+δ(q₄, 0) = (q₄, 0, R)
+δ(q₄, 1) = (q₄, 1, R)
+δ(q₄, ⊔) = (q₆, ⊔, L)
+δ(q₅, 0) = (q₅, 0, R)
+δ(q₅, 1) = (q₅, 1, R)
+δ(q₅, ⊔) = (q₇, ⊔, L)
+δ(q₆, 0) = (q₆, 0, L)
+δ(q₆, 1) = (q₆, 1, L)
+δ(q₆, #) = (q₆, #, L)
+δ(q₆, ⊔) = (q₈, ⊔, R)
+δ(q₇, 0) = (q₇, 0, L)
+δ(q₇, 1) = (q₇, 1, L)
+δ(q₇, #) = (q₇, #, L)
+δ(q₇, ⊔) = (q₉, ⊔, R)
+δ(q₈, 0) = (q₈, 0, R)
+δ(q₈, 1) = (q₈, 1, R)
+δ(q₈, #) = (q₁₀, #, R)
+δ(q₉, 0) = (q₉, 0, R)
+δ(q₉, 1) = (q₉, 1, R)
+δ(q₉, #) = (q₁₁, #, R)
+δ(q₁₀, x) = (q₁₀, x, R)
+δ(q₁₀, 0) = (q₁₂, x, L)
+δ(q₁₁, x) = (q₁₁, x, R)
+δ(q₁₁, 1) = (q₁₂, x, L)
+δ(q₁₂, 0) = (q₁₂, 0, L)
+δ(q₁₂, 1) = (q₁₂, 1, L)
+δ(q₁₂, x) = (q₁₂, x, L)
+δ(q₁₂, #) = (q₁₂, #, L)
+δ(q₁₂, ⊔) = (q₁₃, ⊔, R)
+δ(q₁₃, x) = (q₁₃, x, R)
+δ(q₁₃, 0) = (q₈, x, R)
+δ(q₁₃, 1) = (q₉, x, R)
+δ(q₁₃, #) = (q₁₄, #, R)
+δ(q₁₄, x) = (q₁₄, x, R)
+δ(q₁₄, ⊔) = (qaccept, ⊔, R)
+
+Pares no definidos (se asumen hacia qreject):
+δ(q₁, x) = (qreject, x, R)
+δ(q₁, ⊔) = (qreject, ⊔, R)
+δ(q₂, x) = (qreject, x, R)
+δ(q₂, ⊔) = (qreject, ⊔, R)
+δ(q₃, x) = (qreject, x, R)
+δ(q₃, ⊔) = (qreject, ⊔, R)
+δ(q₄, #) = (qreject, #, R)
+δ(q₄, x) = (qreject, x, R)
+δ(q₅, #) = (qreject, #, R)
+δ(q₅, x) = (qreject, x, R)
+δ(q₆, x) = (qreject, x, R)
+δ(q₇, x) = (qreject, x, R)
+δ(q₈, x) = (qreject, x, R)
+δ(q₈, ⊔) = (qreject, ⊔, R)
+δ(q₉, x) = (qreject, x, R)
+δ(q₉, ⊔) = (qreject, ⊔, R)
+δ(q₁₀, 1) = (qreject, 1, R)
+δ(q₁₀, #) = (qreject, #, R)
+δ(q₁₀, ⊔) = (qreject, ⊔, R)
+δ(q₁₁, 0) = (qreject, 0, R)
+δ(q₁₁, #) = (qreject, #, R)
+δ(q₁₁, ⊔) = (qreject, ⊔, R)
+δ(q₁₃, ⊔) = (qreject, ⊔, R)
+δ(q₁₄, 0) = (qreject, 0, R)
+δ(q₁₄, 1) = (qreject, 1, R)
+δ(q₁₄, #) = (qreject, #, R)
+
+
+2. Verificación de la especificación
+------------------------------------
+[✓] Q, Σ y Γ son conjuntos finitos no vacíos
+[✓] ⊔ ∉ Σ
+[✓] ⊔ ∈ Γ
+[✓] Σ ⊆ Γ
+[✓] q₀ ∈ Q
+[✓] qaccept ∈ Q
+[✓] qreject ∈ Q
+[✓] qreject ≠ qaccept
+[✓] δ: Q × Γ → Q × Γ × {L, R}
+[✓] δ es una función: a lo sumo una imagen por cada par (q, a)
+[!] δ está definida en todo (Q − {qaccept, qreject}) × Γ
+      δ no está definida en 26 par(es): (q1, x), (q1, ⊔), (q2, x), (q2, ⊔), (q3, x), (q3, ⊔), (q4, #), (q4, x), (q5, #), (q5, x), (q6, x), (q7, x), (q8, x), (q8, ⊔), (q9, x), (q9, ⊔), (q10, 1), (q10, #), (q10, ⊔), (q11, 0), (q11, #), (q11, ⊔), (q13, ⊔), (q14, 0), (q14, 1), (q14, #). Se asume δ(q, a) = (qreject, a, R)
+[✓] w ∈ Σ*
+
+
+3. Entrada
+----------
+w = 01#01   (|w| = 5)
+Configuración inicial: C₁ = q₁01#01
+
+
+4. Configuraciones
+------------------
+Cᵢ  = configuración   transición aplicada
+C₁  = q₁01#01
+C₂  = ⊔q₂1#01         δ(q₁, 0) = (q₂, ⊔, R)
+C₃  = ⊔1q₂#01         δ(q₂, 1) = (q₂, 1, R)
+C₄  = ⊔1#q₄01         δ(q₂, #) = (q₄, #, R)
+C₅  = ⊔1#0q₄1         δ(q₄, 0) = (q₄, 0, R)
+C₆  = ⊔1#01q₄⊔        δ(q₄, 1) = (q₄, 1, R)
+C₇  = ⊔1#0q₆1⊔        δ(q₄, ⊔) = (q₆, ⊔, L)
+C₈  = ⊔1#q₆01⊔        δ(q₆, 1) = (q₆, 1, L)
+C₉  = ⊔1q₆#01⊔        δ(q₆, 0) = (q₆, 0, L)
+C₁₀ = ⊔q₆1#01⊔        δ(q₆, #) = (q₆, #, L)
+C₁₁ = q₆⊔1#01⊔        δ(q₆, 1) = (q₆, 1, L)
+C₁₂ = ⊔q₈1#01⊔        δ(q₆, ⊔) = (q₈, ⊔, R)
+C₁₃ = ⊔1q₈#01⊔        δ(q₈, 1) = (q₈, 1, R)
+C₁₄ = ⊔1#q₁₀01⊔       δ(q₈, #) = (q₁₀, #, R)
+C₁₅ = ⊔1q₁₂#x1⊔       δ(q₁₀, 0) = (q₁₂, x, L)
+C₁₆ = ⊔q₁₂1#x1⊔       δ(q₁₂, #) = (q₁₂, #, L)
+C₁₇ = q₁₂⊔1#x1⊔       δ(q₁₂, 1) = (q₁₂, 1, L)
+C₁₈ = ⊔q₁₃1#x1⊔       δ(q₁₂, ⊔) = (q₁₃, ⊔, R)
+C₁₉ = ⊔xq₉#x1⊔        δ(q₁₃, 1) = (q₉, x, R)
+C₂₀ = ⊔x#q₁₁x1⊔       δ(q₉, #) = (q₁₁, #, R)
+C₂₁ = ⊔x#xq₁₁1⊔       δ(q₁₁, x) = (q₁₁, x, R)
+C₂₂ = ⊔x#q₁₂xx⊔       δ(q₁₁, 1) = (q₁₂, x, L)
+C₂₃ = ⊔xq₁₂#xx⊔       δ(q₁₂, x) = (q₁₂, x, L)
+C₂₄ = ⊔q₁₂x#xx⊔       δ(q₁₂, #) = (q₁₂, #, L)
+C₂₅ = q₁₂⊔x#xx⊔       δ(q₁₂, x) = (q₁₂, x, L)
+C₂₆ = ⊔q₁₃x#xx⊔       δ(q₁₂, ⊔) = (q₁₃, ⊔, R)
+C₂₇ = ⊔xq₁₃#xx⊔       δ(q₁₃, x) = (q₁₃, x, R)
+C₂₈ = ⊔x#q₁₄xx⊔       δ(q₁₃, #) = (q₁₄, #, R)
+C₂₉ = ⊔x#xq₁₄x⊔       δ(q₁₄, x) = (q₁₄, x, R)
+C₃₀ = ⊔x#xxq₁₄⊔       δ(q₁₄, x) = (q₁₄, x, R)
+C₃₁ = ⊔x#xx⊔qaccept   δ(q₁₄, ⊔) = (qaccept, ⊔, R)
+
+
+5. Resultado
+------------
+M ACEPTA w
+Pasos ejecutados: 30
+
+C₃₁ = ⊔x#xx⊔qaccept es una configuración de aceptación (su estado es qaccept).
+M acepta w, por lo tanto w ∈ L(M).
