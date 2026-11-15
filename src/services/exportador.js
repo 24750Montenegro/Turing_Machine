@@ -1,6 +1,6 @@
 import { conSubindice as f, conjunto, subindice, transicionATexto } from './notacion.js'
 import { configuracionATexto } from './maquina.js'
-import { analizarEntrada } from './parser.js'
+import { ENCABEZADOS, analizarEntrada } from './parser.js'
 import { RESULTADOS } from './simulador.js'
 
 const MARCAS = { ok: '[✓]', error: '[✗]', advertencia: '[!]' }
@@ -9,7 +9,11 @@ export const nombreConfiguracion = (i) => `C${subindice(i + 1)}`
 
 export function especificacionATexto({ definicion, transiciones, entrada }) {
   const { w } = analizarEntrada(entrada)
-  return [definicion.trim(), transiciones.trim(), `w = ${w || 'ε'}`].join('\n\n') + '\n'
+  return [
+    `${ENCABEZADOS.definicion}\n${definicion.trim()}`,
+    `${ENCABEZADOS.transiciones}\n${transiciones.trim()}`,
+    `${ENCABEZADOS.entrada}\nw = ${w || 'ε'}`,
+  ].join('\n\n') + '\n'
 }
 
 export function maquinaATexto(M) {

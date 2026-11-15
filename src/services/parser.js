@@ -20,7 +20,7 @@ function lineasUtiles(texto) {
   return (texto ?? '')
     .split(/\r?\n/)
     .map((crudo, i) => ({ texto: quitarComentario(crudo), linea: i + 1 }))
-    .filter((l) => l.texto !== '')
+    .filter((l) => l.texto !== '' && !encabezadoDeSeccion(l.texto))
 }
 
 export const esSimboloValido = (s) => s.length === 1 && !/\s/.test(s) && !RESERVADOS.has(s)
@@ -141,21 +141,58 @@ export function analizarEntrada(texto) {
   return { w: [...valor].map(normalizarSimbolo).join(''), linea: lineas[0].linea, errores: r.errores }
 }
 
-export function separarEspecificacion(texto) {
-  const secciones = { definicion: [], transiciones: [], entrada: [] }
-  let pendientes = []
+export const SECCIONES = ['definicion', 'transiciones', 'entrada']
+
+export const ENCABEZADOS = { definicion: '[componentes]', transiciones: '[transiciones]', entrada: '[entrada]' }
+
+const SECCION_DE_ENCABEZADO = {
+  componentes: 'definicion',
+  gramatica: 'definicion',
+  definicion: 'definicion',
+  transiciones: 'transiciones',
+  entrada: 'entrada',
+}
+
+export function encabezadoDeSeccion(linea) {
+  const m = /^\[\s*([^\]]+?)\s*\]$/.exec(quitarComentario(linea))
+  return m ? SECCION_DE_ENCABEZADO[m[1].toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')] ?? null : null
+}
+
+const seccionPorContenido = (util) => (RE_ES_TRANSICION.test(util) ? 'transiciones' : RE_ENTRADA.test(util) ? 'entrada' : 'definicion')
+
+// Sin encabezados, los comentarios y líneas en blanco se van con la siguiente línea con contenido.
+export function clasificarLineas(texto) {
+  const lineas = texto.split(/\r?\n/).map((crudo, i) => ({ numero: i + 1, texto: crudo, seccion: null, tipo: 'contenido' }))
+  let elegida = null
   let ultima = 'definicion'
-  for (const linea of texto.split(/\r?\n/)) {
-    const util = quitarComentario(linea)
-    if (util === '') {
-      pendientes.push(linea)
+  let pendientes = []
+  for (const l of lineas) {
+    const encabezado = encabezadoDeSeccion(l.texto)
+    if (encabezado) {
+      l.tipo = 'encabezado'
+      l.seccion = elegida = ultima = encabezado
+      for (const p of pendientes) p.seccion = encabezado
+      pendientes = []
       continue
     }
-    ultima = RE_ES_TRANSICION.test(util) ? 'transiciones' : RE_ENTRADA.test(util) ? 'entrada' : 'definicion'
-    secciones[ultima].push(...pendientes, linea)
+    const util = quitarComentario(l.texto)
+    if (util === '') {
+      l.tipo = l.texto.trim() ? 'comentario' : 'vacia'
+      if (elegida) l.seccion = elegida
+      else pendientes.push(l)
+      continue
+    }
+    l.seccion = ultima = elegida ?? seccionPorContenido(util)
+    for (const p of pendientes) p.seccion = l.seccion
     pendientes = []
   }
-  secciones[ultima].push(...pendientes)
+  for (const p of pendientes) p.seccion = ultima
+  return lineas
+}
+
+export function separarEspecificacion(texto) {
+  const secciones = { definicion: [], transiciones: [], entrada: [] }
+  for (const l of clasificarLineas(texto)) if (l.tipo !== 'encabezado') secciones[l.seccion].push(l.texto)
   const limpiar = (ls) => ls.join('\n').replace(/^\s*\n/, '').trimEnd()
   return {
     definicion: limpiar(secciones.definicion),

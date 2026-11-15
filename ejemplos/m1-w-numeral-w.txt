@@ -2,11 +2,13 @@
 // Como en el diagrama, las transiciones que no aparecen van a qreject.
 // δ(q1, #) pasa por q14 para verificar que el lado derecho también esté vacío.
 
+[componentes]
 M1 = (Q, Σ, Γ, δ, q1, qaccept, qreject)
 Q = {q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, qaccept, qreject}
 Σ = {0, 1, #}
 Γ = {0, 1, #, x, ⊔}
 
+[transiciones]
 δ(q1, 0) = (q2, ⊔, R)
 δ(q1, 1) = (q3, ⊔, R)
 δ(q1, #) = (q14, #, R)
@@ -60,4 +62,5 @@ Q = {q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13, q14, qaccept, qreje
 δ(q14, x) = (q14, x, R)
 δ(q14, ⊔) = (qaccept, ⊔, R)
 
+[entrada]
 w = 01#01

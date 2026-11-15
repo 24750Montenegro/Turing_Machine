@@ -24,11 +24,11 @@ npm run simular -- ejemplos/inciso-b-acepta.txt resultados/salida.txt
 npm run diagrama -- ejemplos/inciso-b-acepta.txt diagrama.svg
 ```
 
-En la aplicación, los componentes (la "gramática"), las transiciones y la entrada se editan en tres secciones distintas. Cada una se puede escribir ahí mismo o importar desde un .txt; si el archivo trae la especificación completa, se reparte en las tres secciones.
+En la aplicación, los componentes (la "gramática"), las transiciones y la entrada se editan en tres secciones distintas. Cada una se puede escribir ahí mismo o importar desde un .txt; si el archivo trae la especificación completa, antes de cargarlo se muestra una vista previa con la sección a la que irá cada línea. En los editores, **Ctrl + Z** deshace y **Ctrl + Y** rehace, incluidos los cambios hechos desde el diagrama o al cargar archivos.
 
 - **Modo depuración:** avanza configuración por configuración (← →, espacio). Muestra Cᵢ, el desglose u / q / v, la cinta, la transición que se aplicará y la regla de "produce" que corresponde.
 - **Modo rápido:** ejecuta todo de corrido y muestra el resultado.
-- Vistas de la cámara: 3D, planta (el recuadro con el triángulo que apunta al carácter leído) y frontal.
+- Vistas de la cámara: 3D, planta (el recuadro con el triángulo que apunta al carácter leído) y frontal. La máquina está en un salón de estudio; la pizarra muestra la 7-tupla, la configuración actual y la transición aplicada.
 - **Diagrama de estados:** durante la simulación una ficha recorre la transición aplicada, se resalta la línea de la etiqueta usada y abajo se ven la configuración y la cinta.
 - **Edición visual:** con *Editar* se agregan, renombran o eliminan estados, se asignan los papeles de q₀, qaccept y qreject y se agregan, editan o eliminan transiciones δ(qᵢ, b) = (qⱼ, c, L | R). Cada cambio se escribe en la configuración, conservando los comentarios, y se puede deshacer.
 
@@ -36,17 +36,22 @@ En la aplicación, los componentes (la "gramática"), las transiciones y la entr
 
 ```text
 // Los comentarios empiezan con //
+[componentes]
 M = (Q, Σ, Γ, δ, q1, qaccept, qreject)
 Q = {q1, q2, qaccept, qreject}
 Σ = {0, 1}
 Γ = {0, 1, x, ⊔}
 
+[transiciones]
+// q1 marca el primer 0
 δ(q1, 0) = (q2, x, R)
 δ(q2, ⊔) = (qaccept, ⊔, R)
 
+[entrada]
 w = 0011
 ```
 
+- Los encabezados `[componentes]`, `[transiciones]` y `[entrada]` son opcionales: todo lo que está debajo de uno, incluidos los comentarios, va a esa sección. Sin encabezados, cada línea va a la sección de lo que define y los comentarios y líneas en blanco se van con la siguiente línea con contenido. *Guardar especificación* siempre escribe los encabezados.
 - La 7-tupla fija el estado inicial, el de aceptación y el de rechazo, en ese orden.
 - Cada símbolo de Σ y Γ es un solo carácter. `_` se acepta como ⊔, `Sigma`, `Gamma` y `delta` como Σ, Γ y δ.
 - `w = ε` (o `w =`) es la cadena vacía.

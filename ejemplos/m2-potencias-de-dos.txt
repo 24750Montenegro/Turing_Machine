@@ -1,11 +1,13 @@
 // Ejemplo de clase: M2 decide A = {0^(2^n) | n ≥ 0} (figura 1).
 // La traza de w = 0000 coincide con la ejecución mostrada en clase.
 
+[componentes]
 M2 = (Q, Σ, Γ, δ, q1, qaccept, qreject)
 Q = {q1, q2, q3, q4, q5, qaccept, qreject}
 Σ = {0}
 Γ = {0, x, ⊔}
 
+[transiciones]
 δ(q1, 0) = (q2, ⊔, R)
 δ(q1, x) = (qreject, x, R)
 δ(q1, ⊔) = (qreject, ⊔, R)
@@ -22,4 +24,5 @@ Q = {q1, q2, q3, q4, q5, qaccept, qreject}
 δ(q5, x) = (q5, x, L)
 δ(q5, ⊔) = (q2, ⊔, R)
 
+[entrada]
 w = 0000

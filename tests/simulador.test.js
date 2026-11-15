@@ -1,11 +1,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { separarEspecificacion } from '../src/services/parser.js'
+import { clasificarLineas, separarEspecificacion } from '../src/services/parser.js'
 import { verificar } from '../src/services/validador.js'
 import { simular } from '../src/services/simulador.js'
 import { configuracionATexto } from '../src/services/maquina.js'
-import { reporteATexto } from '../src/services/exportador.js'
+import { especificacionATexto, reporteATexto } from '../src/services/exportador.js'
 
 const cargar = (archivo) => verificar(separarEspecificacion(readFileSync(new URL(`../ejemplos/${archivo}`, import.meta.url), 'utf8')))
 const plano = (q) => q
@@ -127,6 +127,23 @@ test('Separa un archivo completo en sus tres secciones', () => {
   assert.equal(partes.definicion, '// encabezado\nQ = {q1}')
   assert.equal(partes.transiciones, '// delta\nδ(q1, a) = (q1, a, R)')
   assert.equal(partes.entrada, 'w = aa')
+})
+
+test('Los encabezados deciden la sección de todo lo que tienen debajo', () => {
+  const texto = '// título\n[componentes]\nQ = {q1}\n// esto es de componentes\n\n[transiciones]\n// q1 avanza\nδ(q1, a) = (q1, a, R)\n[entrada]\nw = aa'
+  const partes = separarEspecificacion(texto)
+  assert.equal(partes.definicion, '// título\nQ = {q1}\n// esto es de componentes')
+  assert.equal(partes.transiciones, '// q1 avanza\nδ(q1, a) = (q1, a, R)')
+  assert.equal(partes.entrada, 'w = aa')
+  const tipos = clasificarLineas(texto).map((l) => `${l.tipo}:${l.seccion}`)
+  assert.deepEqual(tipos.slice(0, 3), ['comentario:definicion', 'encabezado:definicion', 'contenido:definicion'])
+})
+
+test('Guardar y volver a cargar conserva las tres secciones', () => {
+  const textos = separarEspecificacion(readFileSync(new URL('../ejemplos/m2-potencias-de-dos.txt', import.meta.url), 'utf8'))
+  const otra = separarEspecificacion(especificacionATexto(textos))
+  assert.deepEqual(otra, textos)
+  assert.equal(verificar(otra).valida, true)
 })
 
 test('El reporte incluye las configuraciones en notación de clase', () => {

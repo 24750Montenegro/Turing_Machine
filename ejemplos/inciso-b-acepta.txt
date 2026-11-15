@@ -2,11 +2,13 @@
 // L(M) = {0ⁿ1ⁿ | n ≥ 1}. Si w empieza con 1, M va y viene sobre la cinta sin detenerse.
 // Esta entrada llega a qaccept.
 
+[componentes]
 M = (Q, Σ, Γ, δ, q1, qaccept, qreject)
 Q = {q1, q2, q3, q4, q5, q6, qaccept, qreject}
 Σ = {0, 1}
 Γ = {0, 1, x, y, ⊔}
 
+[transiciones]
 // q1: marca con x el 0 más a la izquierda
 δ(q1, 0) = (q2, x, R)
 δ(q1, 1) = (q5, x, R)
@@ -47,4 +49,5 @@ Q = {q1, q2, q3, q4, q5, q6, qaccept, qreject}
 δ(q6, y) = (qreject, y, R)
 δ(q6, ⊔) = (qreject, ⊔, R)
 
+[entrada]
 w = 000111

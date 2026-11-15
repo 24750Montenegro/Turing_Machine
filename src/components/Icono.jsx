@@ -29,6 +29,7 @@ const TRAZOS = {
   lapiz: <path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" />,
   mas: <path d="M12 5v14M5 12h14" />,
   deshacer: <path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3" />,
+  rehacer: <path d="M15 14l5-5-5-5M20 9H10a6 6 0 0 0 0 12h3" />,
   derecha: <path d="M9 6l6 6-6 6" />,
 }
 

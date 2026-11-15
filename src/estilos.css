@@ -1597,3 +1597,144 @@ input[type='range'] {
   justify-self: start;
   margin-top: 6px;
 }
+
+.modal-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(27, 27, 31, 0.45);
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(820px, 100%);
+  max-height: min(88vh, 900px);
+  padding: 16px 18px;
+  background: var(--panel);
+  border: 2.5px solid var(--tinta);
+  border-radius: var(--radio);
+  box-shadow: 6px 6px 0 var(--tinta);
+}
+
+.modal-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal-cabecera h2 {
+  font-size: 19px;
+}
+
+.modal-explicacion {
+  font-size: 14px;
+  color: var(--tinta-suave);
+}
+
+.modal-explicacion code {
+  padding: 0 4px;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--tinta);
+  background: var(--panel-2);
+  border-radius: 4px;
+}
+
+.leyenda-secciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip-seccion {
+  padding: 3px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 2px solid var(--tinta);
+  border-radius: 999px;
+}
+
+.seccion-definicion {
+  --color-seccion: var(--teal);
+  --fondo-seccion: #dcf2ee;
+}
+
+.seccion-transiciones {
+  --color-seccion: var(--coral);
+  --fondo-seccion: #ffe4dc;
+}
+
+.seccion-entrada {
+  --color-seccion: var(--morado);
+  --fondo-seccion: var(--morado-suave);
+}
+
+.chip-seccion {
+  background: var(--fondo-seccion);
+  box-shadow: inset 6px 0 0 var(--color-seccion);
+}
+
+.lineas-carga {
+  flex: 1;
+  min-height: 120px;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+  border: 2px solid var(--tinta);
+  border-radius: 10px;
+  scrollbar-width: thin;
+}
+
+.linea-carga {
+  display: grid;
+  grid-template-columns: 38px 104px minmax(0, 1fr);
+  align-items: baseline;
+  font-size: 13px;
+  background: var(--fondo-seccion);
+  border-left: 6px solid var(--color-seccion);
+}
+
+.linea-carga .numero {
+  padding-right: 8px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--tenue);
+  text-align: right;
+}
+
+.linea-carga .destino {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-seccion);
+  filter: brightness(0.75);
+}
+
+.linea-carga code {
+  padding: 2px 8px 2px 0;
+  font-family: var(--mono);
+  white-space: pre;
+}
+
+.linea-carga.tipo-comentario code {
+  color: var(--tinta-suave);
+  font-style: italic;
+}
+
+.linea-carga.tipo-encabezado code {
+  font-weight: 800;
+}
+
+.modal-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}

@@ -17,6 +17,8 @@ export default function DiagramaEstados({
   onEditar,
   puedeDeshacer,
   onDeshacer,
+  puedeRehacer,
+  onRehacer,
   activo,
   transicionActiva,
   movimiento,
@@ -165,8 +167,11 @@ export default function DiagramaEstados({
             <button className="boton boton-chico" onClick={nuevoEstado} title="Agregar un estado nuevo a Q">
               <Icono nombre="mas" tamano={16} /> Estado
             </button>
-            <button className="boton boton-chico" onClick={onDeshacer} disabled={!puedeDeshacer} title="Deshacer el último cambio hecho desde el diagrama">
+            <button className="boton boton-chico" onClick={onDeshacer} disabled={!puedeDeshacer} title="Deshacer (Ctrl + Z)">
               <Icono nombre="deshacer" tamano={16} /> Deshacer
+            </button>
+            <button className="boton boton-chico" onClick={onRehacer} disabled={!puedeRehacer} title="Rehacer (Ctrl + Y)">
+              <Icono nombre="rehacer" tamano={16} /> Rehacer
             </button>
           </>
         )}
@@ -214,7 +219,7 @@ export default function DiagramaEstados({
 
       {editando ? (
         <p className="diagrama-nota">
-          Modo edición: haz clic en un estado o en una arista para modificarlos. Cada cambio se escribe en la configuración.
+          Modo edición: haz clic en un estado o en una arista para modificarlos. Cada cambio se escribe en la configuración y se deshace con Ctrl + Z.
         </p>
       ) : paso ? (
         <div className="diagrama-movimiento">

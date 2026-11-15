@@ -1,5 +1,13 @@
-import { useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import Icono from './Icono.jsx'
+
+function finDelCambio(anterior, nuevo) {
+  let inicio = 0
+  while (inicio < anterior.length && inicio < nuevo.length && anterior[inicio] === nuevo[inicio]) inicio++
+  let fin = 0
+  while (fin < anterior.length - inicio && fin < nuevo.length - inicio && anterior.at(-1 - fin) === nuevo.at(-1 - fin)) fin++
+  return nuevo.length - fin
+}
 
 export default function EditorSeccion({
   titulo,
@@ -15,6 +23,17 @@ export default function EditorSeccion({
 }) {
   const area = useRef(null)
   const canal = useRef(null)
+  const escrito = useRef(valor)
+
+  useLayoutEffect(() => {
+    const anterior = escrito.current
+    escrito.current = valor
+    const el = area.current
+    if (valor === anterior || document.activeElement !== el) return
+    const cursor = finDelCambio(anterior, valor)
+    el.setSelectionRange(cursor, cursor)
+  }, [valor])
+
   const lineas = Math.max(filas, valor.split('\n').length)
   const lineasError = new Set(errores.map((e) => e.linea).filter(Boolean))
   const lineasAviso = new Set(advertencias.map((e) => e.linea).filter(Boolean))
@@ -67,7 +86,12 @@ export default function EditorSeccion({
           wrap="off"
           spellCheck={false}
           placeholder={placeholder}
-          onChange={(e) => onCambio(e.target.value)}
+          title="Ctrl + Z deshace · Ctrl + Y rehace"
+          aria-keyshortcuts="Control+Z Control+Y"
+          onChange={(e) => {
+            escrito.current = e.target.value
+            onCambio(e.target.value)
+          }}
           onScroll={(e) => {
             canal.current.style.transform = `translateY(${-e.target.scrollTop}px)`
           }}
