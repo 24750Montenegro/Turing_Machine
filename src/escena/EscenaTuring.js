@@ -4,7 +4,7 @@ import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { BLANCO } from '../services/notacion.js'
 import { anillo, engrane, panelConVentana } from './geometrias.js'
-import { alturaTerreno, crearEntorno, texturaCielo } from './entorno.js'
+import { PISO, crearSalon } from './salon.js'
 import { crearLienzo, dibujarEstado, dibujarPantalla, texturaSimbolo, vaciarCacheSimbolos } from './texturas.js'
 
 const PASO = 1.4
@@ -13,6 +13,7 @@ const Y_CELDA = 0.345
 const BORDE_ALIMENTADOR = 6.4
 const Z_PANEL = -1.77
 const BITS = 12
+const LIMITE_OBJETIVO = { x: [-6.5, 6.5], y: [0, 2.8], z: [-3.5, 2.5] }
 
 const FASES = {
   lectura: [0, 0.32],
@@ -26,8 +27,8 @@ const CAMBIO_SIMBOLO = 0.73
 const FIN_ESCANEO = 0.55
 
 const COLORES = {
-  plataforma: '#e3d2b0',
-  zocalo: '#b49f7c',
+  mesa: '#8b5a35',
+  mesaOscura: '#6a3f22',
   bandeja: '#38445c',
   riel: '#ffd23f',
   cuerpo: '#ff6f4f',
@@ -91,14 +92,20 @@ export class EscenaTuring {
     this.efecto = new OutlineEffect(this.renderer, { defaultThickness: 0.0042, defaultColor: [0.1, 0.1, 0.12] })
 
     this.escena = new THREE.Scene()
-    this.escena.background = texturaCielo()
-    this.escena.fog = new THREE.Fog('#f1e6cf', 38, 100)
+    this.escena.background = new THREE.Color('#241c17')
+    this.renderer.localClippingEnabled = true
+    this.planosCinta = [
+      new THREE.Plane(new THREE.Vector3(1, 0, 0), BORDE_ALIMENTADOR),
+      new THREE.Plane(new THREE.Vector3(-1, 0, 0), BORDE_ALIMENTADOR),
+    ]
     this.camara = new THREE.PerspectiveCamera(30, 1, 0.1, 400)
     this.controles = new OrbitControls(this.camara, this.renderer.domElement)
     this.controles.enableDamping = true
     this.controles.maxPolarAngle = Math.PI * 0.45
     this.controles.minDistance = 5
-    this.controles.maxDistance = 42
+    this.controles.minAzimuthAngle = -Math.PI * 0.42
+    this.controles.maxAzimuthAngle = Math.PI * 0.42
+    this.controles.maxDistance = 34
     this.controles.addEventListener('start', () => {
       this.movida = true
       this.tween = null
@@ -112,8 +119,8 @@ export class EscenaTuring {
     this.gradiente.needsUpdate = true
 
     this.construirLuces()
-    this.entorno = crearEntorno(this.gradiente)
-    this.escena.add(this.entorno.grupo)
+    this.salon = crearSalon(this.gradiente)
+    this.escena.add(this.salon.grupo)
     this.construirBase()
     this.construirLector()
     this.construirUnidadDeControl()
@@ -127,6 +134,7 @@ export class EscenaTuring {
 
     document.fonts?.load('800 118px "JetBrains Mono"').then(() => {
       vaciarCacheSimbolos()
+      this.salon.redibujarPizarra()
       for (const c of this.celdas.values()) c.valor = null
       const estado = this.estadoMostrado
       this.estadoMostrado = undefined
@@ -180,9 +188,9 @@ export class EscenaTuring {
   }
 
   construirLuces() {
-    this.escena.add(new THREE.HemisphereLight('#e4f3ff', '#a9c77c', 1.45))
-    const sol = new THREE.DirectionalLight('#fff4de', 2.3)
-    sol.position.set(6, 16, 6)
+    this.escena.add(new THREE.HemisphereLight('#fff1dc', '#6b4a33', 1.35))
+    const sol = new THREE.DirectionalLight('#ffe8c8', 2.2)
+    sol.position.set(8, 16, 7)
     sol.castShadow = true
     sol.shadow.mapSize.set(2048, 2048)
     Object.assign(sol.shadow.camera, { left: -15, right: 15, top: 11, bottom: -11, near: 1, far: 50 })
@@ -191,8 +199,18 @@ export class EscenaTuring {
   }
 
   construirBase() {
-    this.agregar(new RoundedBoxGeometry(19, 0.42, 8.2, 3, 0.12), COLORES.plataforma, [0, -0.21, -0.85])
-    this.agregar(new RoundedBoxGeometry(19.8, 0.36, 9, 3, 0.12), COLORES.zocalo, [0, -0.5, -0.85])
+    this.agregar(new RoundedBoxGeometry(19.6, 0.45, 8.8, 3, 0.1), COLORES.mesa, [0, -0.225, -0.85])
+    this.agregar(new RoundedBoxGeometry(18.8, 0.55, 8.0, 2, 0.06), COLORES.mesaOscura, [0, -0.72, -0.85])
+    const altoPata = -1 - PISO
+    for (const x of [-9.1, 9.1]) {
+      for (const z of [-4.55, 2.85]) {
+        this.agregar(new THREE.CylinderGeometry(0.24, 0.3, altoPata, 14), COLORES.mesaOscura, [x, PISO + altoPata / 2, z])
+        for (const y of [-1.5, PISO + 0.5]) {
+          const anillo = this.agregar(new THREE.TorusGeometry(0.31, 0.08, 8, 20), COLORES.mesa, [x, y, z])
+          anillo.rotation.x = Math.PI / 2
+        }
+      }
+    }
     this.agregar(new RoundedBoxGeometry(BORDE_ALIMENTADOR * 2 + 0.4, 0.3, 2.1, 3, 0.08), COLORES.bandeja, [0, 0.15, 0])
     for (const z of [-0.98, 0.98]) {
       this.agregar(new THREE.BoxGeometry(BORDE_ALIMENTADOR * 2, 0.05, 0.1), COLORES.riel, [0, 0.325, z])
@@ -397,13 +415,17 @@ export class EscenaTuring {
     })
   }
 
+  recorte() {
+    return { clippingPlanes: this.planosCinta, clipShadows: true }
+  }
+
   construirCinta() {
     this.grupoCinta = new THREE.Group()
     this.escena.add(this.grupoCinta)
     this.geometriaCelda = new RoundedBoxGeometry(1.12, 0.09, 1.12, 2, 0.03)
     this.geometriaSimbolo = new THREE.PlaneGeometry(0.9, 0.9)
     this.geometriaSimbolo.rotateX(-Math.PI / 2)
-    const tope = this.malla(new RoundedBoxGeometry(0.14, 0.16, 1.16, 2, 0.04), this.toon(COLORES.tinta))
+    const tope = this.malla(new RoundedBoxGeometry(0.14, 0.16, 1.16, 2, 0.04), this.toon(COLORES.tinta, this.recorte()))
     tope.position.set(-0.66, Y_CELDA + 0.02, 0)
     this.grupoCinta.add(tope)
   }
@@ -412,8 +434,8 @@ export class EscenaTuring {
     let celda = this.libres.pop()
     if (!celda) {
       const grupo = new THREE.Group()
-      const caja = this.malla(this.geometriaCelda, this.toon(COLORES.papel, { emissive: '#ff6f4f', emissiveIntensity: 0 }))
-      const material = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false })
+      const caja = this.malla(this.geometriaCelda, this.toon(COLORES.papel, { emissive: '#ff6f4f', emissiveIntensity: 0, ...this.recorte() }))
+      const material = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, ...this.recorte() })
       material.userData.outlineParameters = { visible: false }
       const simbolo = new THREE.Mesh(this.geometriaSimbolo, material)
       simbolo.position.y = 0.05
@@ -484,7 +506,7 @@ export class EscenaTuring {
     this.paso = null
   }
 
-  mostrar({ id, indice, cinta, cabeza, estado, situacion, pantalla, escritura, duracion }) {
+  mostrar({ id, indice, cinta, cabeza, estado, situacion, pantalla, escritura, duracion, pizarra }) {
     this.terminarPaso()
     const ahora = performance.now()
     const simbolos = [...cinta]
@@ -506,6 +528,7 @@ export class EscenaTuring {
     this.cabeza = cabeza
     this.registro = indice
     this.actualizarPantalla(situacion, pantalla)
+    if (pizarra) this.salon.pizarra(pizarra)
   }
 
   mostrarEstado(estado) {
@@ -548,8 +571,8 @@ export class EscenaTuring {
     }
     const [direccion, ancho, objetivo] =
       vista === 'frontal'
-        ? [new THREE.Vector3(0, 0.2, 1), acotar(8 * aspecto, 11, 16), new THREE.Vector3(0, 1.45, -0.6)]
-        : [new THREE.Vector3(0, 1.0, 1), acotar(7.5 * aspecto, 10.5, 15.5), new THREE.Vector3(0, 1.1, -0.7)]
+        ? [new THREE.Vector3(0, 0.15, 1), acotar(8 * aspecto, 12, 18), new THREE.Vector3(0, 2.9, -1.2)]
+        : [new THREE.Vector3(0, 0.9, 1), acotar(7.5 * aspecto, 10.5, 15.5), new THREE.Vector3(0, 1.15, -0.8)]
     const d = distancia(ancho, 9, 32)
     return { posicion: objetivo.clone().addScaledVector(direccion.normalize(), d), objetivo }
   }
@@ -615,12 +638,19 @@ export class EscenaTuring {
     this.grupoCinta.position.x = -this.pos * PASO
     this.actualizarCeldas(ahora)
     this.animarMecanismos(ahora, dt, fases)
-    this.entorno.actualizar(dt)
+    this.salon.actualizar(ahora, dt)
 
     this.controles.update()
-    const suelo = alturaTerreno(this.camara.position.x, this.camara.position.z) + 1.2
-    if (this.camara.position.y < suelo) this.camara.position.y = suelo
+    this.limitarVista()
     this.efecto.render(this.escena, this.camara)
+  }
+
+  limitarVista() {
+    const objetivo = this.controles.target
+    const antes = objetivo.clone()
+    for (const eje of ['x', 'y', 'z']) objetivo[eje] = acotar(objetivo[eje], ...LIMITE_OBJETIVO[eje])
+    this.camara.position.add(objetivo.clone().sub(antes))
+    if (this.camara.position.y < PISO + 1.5) this.camara.position.y = PISO + 1.5
   }
 
   animarMecanismos(ahora, dt, { lectura, computo, escritura, golpe }) {
@@ -687,14 +717,16 @@ export class EscenaTuring {
     this.controles.dispose()
     this.escena.traverse((o) => {
       o.geometry?.dispose()
-      if (o.material) for (const m of [].concat(o.material)) m.dispose()
+      for (const m of o.material ? [].concat(o.material) : []) {
+        m.map?.dispose()
+        m.dispose()
+      }
     })
     for (const c of this.libres) {
       c.caja.material.dispose()
       c.simbolo.material.dispose()
     }
     for (const l of [this.placaEstado, this.pantallaEstado, this.pantalla]) l.textura.dispose()
-    this.escena.background.dispose()
     this.gradiente.dispose()
     vaciarCacheSimbolos()
     this.renderer.dispose()

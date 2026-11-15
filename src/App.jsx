@@ -2,9 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { separarEspecificacion } from './services/parser.js'
 import { verificar } from './services/validador.js'
 import { LIMITE_PREDETERMINADO, simular } from './services/simulador.js'
-import { configuracionInicial } from './services/maquina.js'
-import { especificacionATexto, reporteATexto } from './services/exportador.js'
+import { configuracionATexto, configuracionInicial } from './services/maquina.js'
+import { conSubindice, transicionATexto } from './services/notacion.js'
+import { especificacionATexto, maquinaATexto, nombreConfiguracion, reporteATexto } from './services/exportador.js'
 import { descargarTexto, elegirArchivoTexto } from './utils/archivos.js'
+import { useHistorial } from './utils/historial.js'
 import { EJEMPLOS } from './ejemplos.js'
 import Encabezado from './components/Encabezado.jsx'
 import EditorSeccion from './components/EditorSeccion.jsx'
@@ -14,11 +16,13 @@ import DiagramaEstados from './components/DiagramaEstados.jsx'
 import Controles, { VELOCIDADES } from './components/Controles.jsx'
 import Depurador from './components/Depurador.jsx'
 import Icono from './components/Icono.jsx'
+import VistaPreviaCarga from './components/VistaPreviaCarga.jsx'
 
 const ALMACEN = 'maquina-turing:especificacion'
 const ALMACEN_PANEL = 'maquina-turing:entradas-visibles'
 
 const PANTALLA = { acepta: 'ACEPTA', rechaza: 'RECHAZA', ciclo: 'CICLO ∞', limite: 'SIN PARAR' }
+const PIZARRA = { acepta: 'M acepta w ✓', rechaza: 'M rechaza w ✗', ciclo: 'M no se detiene: ciclo ∞', limite: 'Sin resultado (límite de pasos)' }
 
 const PLANTILLA_COMPONENTES = 'M = (Q, Σ, Γ, δ, q1, qaccept, qreject)\nQ = {q1, qaccept, qreject}\nΣ = {0, 1}\nΓ = {0, 1, ⊔}'
 
@@ -49,7 +53,7 @@ function ritmo(depuracion, velocidad, total) {
 }
 
 export default function App() {
-  const [textos, setTextos] = useState(textosIniciales)
+  const { valor: textos, cambiar: cambiarTextos, deshacer, rehacer, puedeDeshacer, puedeRehacer } = useHistorial(textosIniciales)
   const verificacion = useMemo(() => verificar(textos), [textos])
   const [ejecucion, setEjecucion] = useState(null)
   const [indice, setIndice] = useState(0)
@@ -62,7 +66,7 @@ export default function App() {
   const [pestana, setPestana] = useState('maquina')
   const [aviso, setAviso] = useState(null)
   const [entradasVisibles, setEntradasVisibles] = useState(() => leer(ALMACEN_PANEL, true) !== false)
-  const [historial, setHistorial] = useState([])
+  const [cargaPendiente, setCargaPendiente] = useState(null)
   const [versionDiagrama, setVersionDiagrama] = useState(0)
   const [movimiento, setMovimiento] = useState(null)
   const previo = useRef({ id: null, indice: -1 })
@@ -120,6 +124,14 @@ export default function App() {
         ejecutar()
         return
       }
+      const tecla = e.key.toLowerCase()
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && (tecla === 'z' || tecla === 'y')) {
+        if (e.target.closest('input, select') || (e.target.closest('textarea') && !e.target.closest('.codigo'))) return
+        e.preventDefault()
+        if (tecla === 'y' || e.shiftKey) rehacer()
+        else deshacer()
+        return
+      }
       if (e.target.closest('textarea, input, select')) return
       if (e.key === ' ' && e.target.closest('button')) return
       const acciones = {
@@ -136,7 +148,7 @@ export default function App() {
     }
     window.addEventListener('keydown', teclado)
     return () => window.removeEventListener('keydown', teclado)
-  }, [ejecutar, ir, alternar, indice, total, sim])
+  }, [ejecutar, ir, alternar, indice, total, sim, deshacer, rehacer])
 
   const cambiarModo = (enDepuracion) => {
     setDepuracion(enDepuracion)
@@ -144,8 +156,7 @@ export default function App() {
   }
 
   const reemplazarTodo = (texto, mensaje) => {
-    setTextos(separarEspecificacion(texto))
-    setHistorial([])
+    cambiarTextos(separarEspecificacion(texto))
     setVersionDiagrama((v) => v + 1)
     setEjecucion(null)
     setReproduciendo(false)
@@ -155,7 +166,7 @@ export default function App() {
 
   const cargarEspecificacion = async () => {
     const archivo = await elegirArchivoTexto()
-    if (archivo) reemplazarTodo(archivo.texto, `Se cargó ${archivo.nombre}`)
+    if (archivo) setCargaPendiente(archivo)
   }
 
   const importarSeccion = async (seccion) => {
@@ -163,10 +174,10 @@ export default function App() {
     if (!archivo) return
     const partes = separarEspecificacion(archivo.texto)
     if (Object.values(partes).filter((p) => p.trim()).length > 1) {
-      reemplazarTodo(archivo.texto, `${archivo.nombre} contiene una especificación completa; se repartió en las tres secciones`)
+      setCargaPendiente(archivo)
       return
     }
-    setTextos((t) => ({ ...t, [seccion]: archivo.texto.trimEnd() }))
+    cambiarTextos((t) => ({ ...t, [seccion]: archivo.texto.trimEnd() }))
     setAviso(`Se importó ${archivo.nombre}`)
   }
 
@@ -175,19 +186,7 @@ export default function App() {
     descargarTexto(`configuraciones-${ejecucion.verificacion.maquina.nombre}.txt`, reporteATexto(ejecucion.verificacion, ejecucion.simulacion))
   }
 
-  const editarDesdeDiagrama = (nuevos) => {
-    setHistorial((h) => [...h.slice(-49), textos])
-    setTextos(nuevos)
-  }
-
-  const deshacer = () => {
-    const anterior = historial.at(-1)
-    if (!anterior) return
-    setHistorial(historial.slice(0, -1))
-    setTextos(anterior)
-  }
-
-  const actualizar = (seccion) => (valor) => setTextos((t) => ({ ...t, [seccion]: valor }))
+  const actualizar = (seccion) => (valor) => cambiarTextos((t) => ({ ...t, [seccion]: valor }), seccion)
   const mensajes = (seccion) => ({
     errores: verificacion.errores.filter((e) => e.seccion === seccion),
     advertencias: verificacion.advertencias.filter((e) => e.seccion === seccion),
@@ -202,6 +201,8 @@ export default function App() {
 
   const cuadro = useMemo(() => {
     if (!C) return null
+    const M = ejecucion?.verificacion.maquina ?? verificacion.maquina
+    const aplicadaEnPizarra = sim && indice > 0 ? sim.pasos[indice].transicion : null
     return {
       id: ejecucion?.id ?? 'previa',
       indice: sim ? indice : 0,
@@ -212,8 +213,14 @@ export default function App() {
       pantalla: !sim ? 'LISTO' : terminado ? PANTALLA[sim.resultado] : `PASO ${indice}/${total}`,
       escritura: sim && indice > 0 ? sim.pasos[indice - 1].configuracion.u.length : null,
       duracion: !sim ? 0 : depuracion ? Math.min(1500, ms * 0.9) : ms * 0.95,
+      pizarra: {
+        maquina: M ? maquinaATexto(M)[0] : '',
+        configuracion: `${nombreConfiguracion(sim ? indice : 0)} = ${configuracionATexto(C)}`,
+        transicion: aplicadaEnPizarra ? transicionATexto(aplicadaEnPizarra, conSubindice) : '',
+        resultado: terminado ? PIZARRA[sim.resultado] : '',
+      },
     }
-  }, [C, ejecucion, sim, indice, situacion, terminado, total, depuracion, ms])
+  }, [C, ejecucion, sim, indice, situacion, terminado, total, depuracion, ms, verificacion.maquina])
 
   const enSimulacion = Boolean(sim) && !desactualizada
   const aplicada = enSimulacion && indice > 0 ? pasoActual.transicion : null
@@ -330,9 +337,11 @@ export default function App() {
                       key={versionDiagrama}
                       maquina={maquinaActual}
                       textos={textos}
-                      onEditar={editarDesdeDiagrama}
-                      puedeDeshacer={historial.length > 0}
+                      onEditar={cambiarTextos}
+                      puedeDeshacer={puedeDeshacer}
                       onDeshacer={deshacer}
+                      puedeRehacer={puedeRehacer}
+                      onRehacer={rehacer}
                       activo={enSimulacion ? C.q : null}
                       transicionActiva={aplicada}
                       movimiento={enSimulacion ? movimiento : null}
@@ -341,9 +350,9 @@ export default function App() {
                   ) : (
                     <div className="nota centrada">
                       <p>Corrige la especificación para ver el diagrama.</p>
-                      {historial.length > 0 && (
+                      {puedeDeshacer && (
                         <button className="boton boton-chico" onClick={deshacer}>
-                          <Icono nombre="deshacer" tamano={16} /> Deshacer el último cambio del diagrama
+                          <Icono nombre="deshacer" tamano={16} /> Deshacer el último cambio (Ctrl + Z)
                         </button>
                       )}
                     </div>
@@ -386,6 +395,18 @@ export default function App() {
           />
         </div>
       </main>
+
+      {cargaPendiente && (
+        <VistaPreviaCarga
+          nombre={cargaPendiente.nombre}
+          texto={cargaPendiente.texto}
+          onCancelar={() => setCargaPendiente(null)}
+          onConfirmar={() => {
+            reemplazarTodo(cargaPendiente.texto, `Se cargó ${cargaPendiente.nombre}`)
+            setCargaPendiente(null)
+          }}
+        />
+      )}
 
       {aviso && (
         <div className="aviso-flotante" role="status">
