@@ -2,8 +2,10 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { BLANCO } from '../services/notacion.js'
 import { anillo, engrane, panelConVentana } from './geometrias.js'
+import { proyectarUV, texturaCepillada, texturaMadera, texturaMetal } from './materiales.js'
 import { PISO, crearSalon } from './salon.js'
 import { crearLienzo, dibujarEstado, dibujarPantalla, texturaSimbolo, vaciarCacheSimbolos } from './texturas.js'
 
@@ -29,25 +31,24 @@ const FIN_ESCANEO = 0.55
 const COLORES = {
   mesa: '#8b5a35',
   mesaOscura: '#6a3f22',
-  bandeja: '#38445c',
-  riel: '#ffd23f',
-  cuerpo: '#ff6f4f',
-  alimentador: '#2a9d8f',
-  acento: '#ffd23f',
   papel: '#fffaf0',
   papelActivo: '#ffe27a',
   tinta: '#1b1b1f',
   ranura: '#121419',
   vidrio: '#bfe9ff',
-  rodillo: '#f4efe4',
-  laton: '#e0a93b',
-  cobre: '#c8743b',
-  acero: '#b9c2cc',
-  fondoMecanismo: '#2a2e38',
+  caucho: '#2b2724',
+  fondoMecanismo: '#1e1a17',
   lectura: '#5ee7ff',
   escritura: '#ffd23f',
   bombillaApagada: '#4b4f5c',
   bombillaEncendida: '#ffe066',
+}
+
+const METALES = {
+  laton: ['#5c3b0e', '#b58228', '#e9c063', '#fff6d0'],
+  cobre: ['#5a230f', '#b05a30', '#e59468', '#ffe6d4'],
+  acero: ['#3a424b', '#808b97', '#c6d0da', '#ffffff'],
+  hierro: ['#1a1d21', '#3c434a', '#69737d', '#d0d8e0'],
 }
 
 const COLOR_LED = {
@@ -117,6 +118,12 @@ export class EscenaTuring {
     this.gradiente.magFilter = THREE.NearestFilter
     this.gradiente.generateMipmaps = false
     this.gradiente.needsUpdate = true
+    this.texturas = {
+      madera: texturaMadera({ base: [74, 40, 24], oscuro: [34, 17, 9], claro: [116, 68, 40] }),
+      mesa: texturaMadera({ base: [139, 90, 53], oscuro: [92, 55, 30], claro: [172, 120, 78], semilla: 23 }),
+      hierro: texturaCepillada('#474d55'),
+    }
+    this.matcaps = Object.fromEntries(Object.entries(METALES).map(([tipo, bandas]) => [tipo, texturaMetal(bandas)]))
 
     this.construirLuces()
     this.salon = crearSalon(this.gradiente)
@@ -163,6 +170,21 @@ export class EscenaTuring {
     return m
   }
 
+  metal(tipo) {
+    return new THREE.MeshMatcapMaterial({ matcap: this.matcaps[tipo] })
+  }
+
+  revestir(geometria, textura, posicion, { tinte = '#ffffff', ...opciones } = {}) {
+    return this.agregar(proyectarUV(geometria), this.toon(tinte, { map: this.texturas[textura] }), posicion, opciones)
+  }
+
+  remaches(puntos, normal = [0, 0, 1], radio = 0.035) {
+    const giro = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(...normal))
+    const cabeza = new THREE.SphereGeometry(radio, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2).applyQuaternion(giro)
+    const piezas = puntos.map(([x, y, z]) => cabeza.clone().translate(x, y, z))
+    return this.agregar(mergeGeometries(piezas), this.metal('laton'), [0, 0, 0], { sombra: false, contorno: false })
+  }
+
   pantallaPlana(lienzo, ancho, alto, posicion, horizontal = false) {
     const m = this.agregar(
       new THREE.PlaneGeometry(ancho, alto),
@@ -199,8 +221,8 @@ export class EscenaTuring {
   }
 
   construirBase() {
-    this.agregar(new RoundedBoxGeometry(19.6, 0.45, 8.8, 3, 0.1), COLORES.mesa, [0, -0.225, -0.85])
-    this.agregar(new RoundedBoxGeometry(18.8, 0.55, 8.0, 2, 0.06), COLORES.mesaOscura, [0, -0.72, -0.85])
+    this.revestir(new RoundedBoxGeometry(19.6, 0.45, 8.8, 3, 0.1), 'mesa', [0, -0.225, -0.85])
+    this.revestir(new RoundedBoxGeometry(18.8, 0.55, 8.0, 2, 0.06), 'mesa', [0, -0.72, -0.85], { tinte: '#a89a90' })
     const altoPata = -1 - PISO
     for (const x of [-9.1, 9.1]) {
       for (const z of [-4.55, 2.85]) {
@@ -211,24 +233,27 @@ export class EscenaTuring {
         }
       }
     }
-    this.agregar(new RoundedBoxGeometry(BORDE_ALIMENTADOR * 2 + 0.4, 0.3, 2.1, 3, 0.08), COLORES.bandeja, [0, 0.15, 0])
+    this.revestir(new RoundedBoxGeometry(BORDE_ALIMENTADOR * 2 + 0.4, 0.3, 2.1, 3, 0.08), 'hierro', [0, 0.15, 0])
     for (const z of [-0.98, 0.98]) {
-      this.agregar(new THREE.BoxGeometry(BORDE_ALIMENTADOR * 2, 0.05, 0.1), COLORES.riel, [0, 0.325, z])
+      this.agregar(new THREE.BoxGeometry(BORDE_ALIMENTADOR * 2, 0.05, 0.1), this.metal('laton'), [0, 0.325, z])
     }
 
     this.rodillos = []
     for (const lado of [-1, 1]) {
       const x = lado * (BORDE_ALIMENTADOR + 0.95)
-      this.agregar(new RoundedBoxGeometry(1.9, 1.5, 2.8, 4, 0.22), COLORES.alimentador, [x, 0.75, 0])
-      this.agregar(new RoundedBoxGeometry(1.3, 0.12, 2.0, 2, 0.05), COLORES.acento, [x, 1.54, 0])
+      this.revestir(new RoundedBoxGeometry(1.9, 1.5, 2.8, 4, 0.22), 'madera', [x, 0.75, 0])
+      this.agregar(new RoundedBoxGeometry(1.3, 0.12, 2.0, 2, 0.05), this.metal('laton'), [x, 1.54, 0])
+      this.agregar(new RoundedBoxGeometry(1.98, 0.14, 2.88, 2, 0.05), this.metal('laton'), [x, 0.07, 0])
+      this.remaches([[x - 0.62, 0.36, 1.4], [x + 0.62, 0.36, 1.4], [x - 0.62, 1.22, 1.4], [x + 0.62, 1.22, 1.4]])
+      this.remaches([[x - 0.52, 1.6, -0.86], [x + 0.52, 1.6, -0.86], [x - 0.52, 1.6, 0.86], [x + 0.52, 1.6, 0.86]], [0, 1, 0], 0.045)
       this.agregar(new THREE.BoxGeometry(0.04, 0.2, 1.36), COLORES.ranura, [lado * BORDE_ALIMENTADOR, 0.39, 0], { contorno: false })
 
       const rodillo = new THREE.Group()
-      const cilindro = this.malla(new THREE.CylinderGeometry(0.2, 0.2, 1.46, 24), this.toon(COLORES.rodillo))
+      const cilindro = this.malla(new THREE.CylinderGeometry(0.2, 0.2, 1.46, 24), this.toon(COLORES.caucho))
       cilindro.rotation.x = Math.PI / 2
       rodillo.add(cilindro)
       for (let i = 0; i < 4; i++) {
-        const franja = this.malla(new THREE.BoxGeometry(0.06, 0.02, 1.48), this.toon(COLORES.tinta), { contorno: false })
+        const franja = this.malla(new THREE.BoxGeometry(0.06, 0.02, 1.48), this.metal('laton'), { contorno: false })
         const a = (i * Math.PI) / 2
         franja.position.set(Math.cos(a) * 0.2, Math.sin(a) * 0.2, 0)
         franja.rotation.z = a + Math.PI / 2
@@ -238,34 +263,29 @@ export class EscenaTuring {
       this.escena.add(rodillo)
       this.rodillos.push(rodillo)
       for (const z of [-0.84, 0.84]) {
-        this.agregar(new RoundedBoxGeometry(0.42, 0.56, 0.14, 2, 0.04), COLORES.alimentador, [lado * (BORDE_ALIMENTADOR - 0.2), 0.6, z])
+        this.agregar(new RoundedBoxGeometry(0.42, 0.56, 0.14, 2, 0.04), this.metal('hierro'), [lado * (BORDE_ALIMENTADOR - 0.2), 0.6, z])
+        const eje = this.agregar(new THREE.CylinderGeometry(0.09, 0.09, 0.05, 18), this.metal('laton'), [rodillo.position.x, 0.64, z + Math.sign(z) * 0.093])
+        eje.rotation.x = Math.PI / 2
       }
     }
   }
 
   construirLector() {
-    this.agregar(
-      anillo({ ancho: 2.2, fondo: 3.4, radio: 0.32, hueco: 1.4, radioHueco: 0.1, alto: 0.5, bisel: 0.04 }),
-      COLORES.cuerpo,
-      [0, 0.34, 0],
-    )
+    this.revestir(anillo({ ancho: 2.2, fondo: 3.4, radio: 0.32, hueco: 1.4, radioHueco: 0.1, alto: 0.5, bisel: 0.04 }), 'madera', [0, 0.34, 0])
+    this.remaches([[-1.02, 0.88, 0.85], [1.02, 0.88, 0.85], [-1.02, 0.88, -0.85], [1.02, 0.88, -0.85], [-0.85, 0.88, -1.45], [0.85, 0.88, -1.45]], [0, 1, 0], 0.045)
     for (const lado of [-1, 1]) {
       this.agregar(new THREE.BoxGeometry(0.04, 0.2, 1.36), COLORES.ranura, [lado * 1.14, 0.39, 0], { contorno: false })
     }
     this.agregar(
       anillo({ ancho: 1.86, fondo: 1.86, radio: 0.16, hueco: 1.4, radioHueco: 0.1, alto: 0.06, bisel: 0.02 }),
-      COLORES.acento,
+      this.metal('laton'),
       [0, 0.9, 0],
     )
 
     for (const x of [-0.79, 0.79]) {
-      for (const z of [-0.79, 0.79]) this.agregar(new RoundedBoxGeometry(0.14, 0.88, 0.14, 2, 0.04), COLORES.cuerpo, [x, 1.42, z])
+      for (const z of [-0.79, 0.79]) this.agregar(new RoundedBoxGeometry(0.14, 0.88, 0.14, 2, 0.04), this.metal('laton'), [x, 1.42, z])
     }
-    this.agregar(
-      anillo({ ancho: 1.74, fondo: 1.74, radio: 0.12, hueco: 1.46, radioHueco: 0.06, alto: 0.08, bisel: 0.02 }),
-      COLORES.cuerpo,
-      [0, 1.88, 0],
-    )
+    this.revestir(anillo({ ancho: 1.74, fondo: 1.74, radio: 0.12, hueco: 1.46, radioHueco: 0.06, alto: 0.08, bisel: 0.02 }), 'madera', [0, 1.88, 0])
 
     const vidrio = this.agregar(
       new RoundedBoxGeometry(1.58, 0.88, 1.58, 3, 0.06),
@@ -283,14 +303,14 @@ export class EscenaTuring {
     triangulo.closePath()
     const geometriaTriangulo = new THREE.ExtrudeGeometry(triangulo, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 1 })
     geometriaTriangulo.rotateX(-Math.PI / 2)
-    this.agregar(geometriaTriangulo, COLORES.acento, [0, 1.99, -0.7])
+    this.agregar(geometriaTriangulo, this.metal('laton'), [0, 1.99, -0.7])
 
     this.cabezal = new THREE.Group()
-    const varilla = this.malla(new THREE.CylinderGeometry(0.05, 0.05, 0.8, 16), this.toon(COLORES.tinta))
+    const varilla = this.malla(new THREE.CylinderGeometry(0.05, 0.05, 0.8, 16), this.metal('acero'))
     varilla.position.y = 0.42
-    const collar = this.malla(new THREE.CylinderGeometry(0.11, 0.11, 0.1, 20), this.toon(COLORES.acento))
+    const collar = this.malla(new THREE.CylinderGeometry(0.11, 0.11, 0.1, 20), this.metal('laton'))
     collar.position.y = 0.06
-    const punta = this.malla(new THREE.ConeGeometry(0.09, 0.2, 20), this.toon(COLORES.cuerpo))
+    const punta = this.malla(new THREE.ConeGeometry(0.09, 0.2, 20), this.metal('cobre'))
     punta.rotation.x = Math.PI
     punta.position.y = -0.09
     this.cabezal.add(varilla, collar, punta)
@@ -319,8 +339,10 @@ export class EscenaTuring {
     this.escaneo = luz(plano, [0, Y_CELDA + 0.07, 0])
 
     this.placaEstado = crearLienzo(512, 198)
-    this.pantallaPlana(this.placaEstado, 1.55, 0.6, [-0.12, 0.885, 1.3], true)
+    this.agregar(new RoundedBoxGeometry(1.65, 0.03, 0.7, 2, 0.012), this.metal('laton'), [-0.12, 0.88, 1.3], { contorno: false })
+    this.pantallaPlana(this.placaEstado, 1.55, 0.6, [-0.12, 0.9, 1.3], true)
 
+    this.agregar(new RoundedBoxGeometry(1.84, 0.46, 0.06, 2, 0.02), this.metal('laton'), [0, 0.6, 1.73])
     this.agregar(new RoundedBoxGeometry(1.7, 0.36, 0.06, 2, 0.03), COLORES.tinta, [0, 0.6, 1.74])
     this.pantalla = crearLienzo(640, 112)
     this.pantallaPlana(this.pantalla, 1.58, 0.27, [0, 0.6, 1.775])
@@ -328,24 +350,34 @@ export class EscenaTuring {
     this.leds = [
       this.agregar(new THREE.SphereGeometry(0.08, 20, 14), this.toon(COLOR_LED.listo, { emissive: COLOR_LED.listo, emissiveIntensity: 0.5 }), [0.86, 0.94, 1.3]),
     ]
+    this.agregar(new THREE.TorusGeometry(0.1, 0.028, 8, 24), this.metal('laton'), [0.86, 0.89, 1.3]).rotation.x = Math.PI / 2
   }
 
   construirUnidadDeControl() {
     const ventana = { x: -1.05, y: -0.35, radio: 0.5 }
     const [vx, vy] = [ventana.x, 1.5 + ventana.y]
 
-    this.agregar(new RoundedBoxGeometry(3.6, 3.0, 1.3, 4, 0.18), COLORES.cuerpo, [0, 1.5, -2.6])
-    this.agregar(panelConVentana({ ancho: 3.6, alto: 3.0, radio: 0.24, ventana, grosor: 0.12, bisel: 0.03 }), COLORES.cuerpo, [0, 1.5, Z_PANEL - 0.15])
-    this.agregar(new RoundedBoxGeometry(3.72, 0.14, 1.44, 2, 0.05), COLORES.acento, [0, 3.04, -2.6])
+    this.revestir(new RoundedBoxGeometry(3.6, 3.0, 1.3, 4, 0.18), 'madera', [0, 1.5, -2.6])
+    this.revestir(panelConVentana({ ancho: 3.6, alto: 3.0, radio: 0.24, ventana, grosor: 0.12, bisel: 0.03 }), 'madera', [0, 1.5, Z_PANEL - 0.15])
+    this.revestir(new RoundedBoxGeometry(3.72, 0.14, 1.44, 2, 0.05), 'madera', [0, 3.04, -2.6], { tinte: '#c9b8ad' })
+    this.agregar(new RoundedBoxGeometry(3.78, 0.05, 1.5, 2, 0.02), this.metal('laton'), [0, 2.96, -2.6])
+    for (const x of [-1.73, 1.73]) {
+      for (const z of [-3.19, -2.01]) this.agregar(new RoundedBoxGeometry(0.3, 0.18, 0.3, 2, 0.05), this.metal('laton'), [x, 3.04, z])
+    }
+    const filas = [1.05, 1.4, 1.75, 2.1, 2.45, 2.8]
+    this.remaches(filas.flatMap((y) => [[-1.69, y, Z_PANEL], [1.69, y, Z_PANEL]]))
+    for (const lado of [-1, 1]) {
+      this.remaches(filas.flatMap((y) => [[lado * 1.8, y - 0.35, -2.25], [lado * 1.8, y - 0.35, -2.95]]), [lado, 0, 0])
+    }
 
     this.agregar(new THREE.CircleGeometry(0.5, 40), COLORES.fondoMecanismo, [vx, vy, Z_PANEL - 0.17], { contorno: false })
     const centro = { x: vx - 0.07, y: vy + 0.07 }
     this.engranes = [
-      { radio: 0.3, dientes: 12, color: COLORES.laton, x: centro.x, y: centro.y, fase: 0 },
-      { radio: 0.17, dientes: 7, color: COLORES.cobre, x: centro.x + 0.47 * Math.cos(-0.6), y: centro.y + 0.47 * Math.sin(-0.6), fase: 0.2 },
-      { radio: 0.2, dientes: 8, color: COLORES.acero, x: centro.x + 0.5 * Math.cos(2.4), y: centro.y + 0.5 * Math.sin(2.4), fase: 0.1 },
-    ].map((e) => ({ ...e, malla: this.agregar(engrane(e), e.color, [e.x, e.y, Z_PANEL - 0.13], { sombra: false }) }))
-    this.agregar(new THREE.TorusGeometry(0.52, 0.055, 10, 40), COLORES.laton, [vx, vy, Z_PANEL + 0.005])
+      { radio: 0.3, dientes: 12, metal: 'laton', x: centro.x, y: centro.y, fase: 0 },
+      { radio: 0.17, dientes: 7, metal: 'cobre', x: centro.x + 0.47 * Math.cos(-0.6), y: centro.y + 0.47 * Math.sin(-0.6), fase: 0.2 },
+      { radio: 0.2, dientes: 8, metal: 'acero', x: centro.x + 0.5 * Math.cos(2.4), y: centro.y + 0.5 * Math.sin(2.4), fase: 0.1 },
+    ].map((e) => ({ ...e, malla: this.agregar(engrane(e), this.metal(e.metal), [e.x, e.y, Z_PANEL - 0.13], { sombra: false }) }))
+    this.agregar(new THREE.TorusGeometry(0.52, 0.055, 10, 40), this.metal('laton'), [vx, vy, Z_PANEL + 0.005])
     const vidrio = this.agregar(
       new THREE.CircleGeometry(0.5, 40),
       new THREE.MeshBasicMaterial({ color: COLORES.vidrio, transparent: true, opacity: 0.18, depthWrite: false }),
@@ -355,6 +387,7 @@ export class EscenaTuring {
     vidrio.renderOrder = 2
     this.brillos([[vx - 0.2, vy + 0.08, Z_PANEL + 0.02, 0.4]])
 
+    this.agregar(new RoundedBoxGeometry(1.12, 0.92, 0.04, 2, 0.03), this.metal('laton'), [1.05, 1.07, Z_PANEL + 0.005])
     this.agregar(new RoundedBoxGeometry(1.0, 0.8, 0.05, 2, 0.04), COLORES.tinta, [1.05, 1.07, Z_PANEL + 0.01])
     this.bombillas = []
     for (let fila = 0; fila < 3; fila++) {
@@ -370,6 +403,7 @@ export class EscenaTuring {
       }
     }
 
+    this.agregar(new RoundedBoxGeometry(2.44, 1.04, 0.04, 2, 0.03), this.metal('laton'), [0, 2.38, Z_PANEL + 0.005])
     this.agregar(new RoundedBoxGeometry(2.3, 0.9, 0.06, 2, 0.03), COLORES.tinta, [0, 2.38, Z_PANEL + 0.01])
     this.pantallaEstado = crearLienzo(512, 182)
     this.pantallaPlana(this.pantallaEstado, 2.14, 0.76, [0, 2.38, Z_PANEL + 0.045])
@@ -378,9 +412,9 @@ export class EscenaTuring {
     for (const [nombre, x, color, desdeLector] of [['lectura', -0.45, COLORES.lectura, true], ['escritura', 0.45, COLORES.escritura, false]]) {
       const puntos = [new THREE.Vector3(x, 1.92, -0.9), new THREE.Vector3(x, 1.66, -1.35), new THREE.Vector3(x, 1.55, Z_PANEL)]
       const curva = new THREE.CatmullRomCurve3(desdeLector ? puntos : [...puntos].reverse())
-      this.agregar(new THREE.TubeGeometry(curva, 32, 0.055, 10), COLORES.tinta, [0, 0, 0])
+      this.agregar(new THREE.TubeGeometry(curva, 32, 0.055, 10), this.metal('cobre'), [0, 0, 0])
       for (const [p, dz] of [[puntos[0], -0.04], [puntos[2], 0.05]]) {
-        const collar = this.agregar(new THREE.CylinderGeometry(0.09, 0.09, 0.1, 16), COLORES.laton, [p.x, p.y, p.z + dz])
+        const collar = this.agregar(new THREE.CylinderGeometry(0.09, 0.09, 0.1, 16), this.metal('laton'), [p.x, p.y, p.z + dz])
         collar.rotation.x = Math.PI / 2
       }
       const pulso = this.agregar(new THREE.SphereGeometry(0.13, 16, 12), this.toon(color, { emissive: color, emissiveIntensity: 1.2 }), [0, 0, 0], { sombra: false })
@@ -389,10 +423,10 @@ export class EscenaTuring {
     }
 
     this.pistones = [-0.94, 0.94].map((x) => {
-      this.agregar(new THREE.CylinderGeometry(0.13, 0.13, 0.42, 18), COLORES.acento, [x, 1.09, -1.3])
+      this.agregar(new THREE.CylinderGeometry(0.13, 0.13, 0.42, 18), this.metal('laton'), [x, 1.09, -1.3])
       const vastago = new THREE.Group()
-      const barra = this.malla(new THREE.CylinderGeometry(0.05, 0.05, 0.5, 12), this.toon(COLORES.acero))
-      const tapa = this.malla(new THREE.CylinderGeometry(0.11, 0.11, 0.07, 18), this.toon(COLORES.cuerpo))
+      const barra = this.malla(new THREE.CylinderGeometry(0.05, 0.05, 0.5, 12), this.metal('acero'))
+      const tapa = this.malla(new THREE.CylinderGeometry(0.11, 0.11, 0.07, 18), this.metal('cobre'))
       tapa.position.y = 0.26
       vastago.add(barra, tapa)
       vastago.position.set(x, 1.3, -1.3)
@@ -400,9 +434,9 @@ export class EscenaTuring {
       return vastago
     })
 
-    this.agregar(new THREE.CylinderGeometry(0.17, 0.2, 0.5, 18), COLORES.tinta, [1.2, 3.35, -2.6])
-    this.agregar(new THREE.CylinderGeometry(0.21, 0.21, 0.08, 18), COLORES.acento, [1.2, 3.62, -2.6])
-    this.agregar(new THREE.CylinderGeometry(0.025, 0.025, 0.7, 8), COLORES.tinta, [-1.3, 3.45, -2.75])
+    this.agregar(new THREE.CylinderGeometry(0.17, 0.2, 0.5, 18), this.metal('hierro'), [1.2, 3.35, -2.6])
+    this.agregar(new THREE.CylinderGeometry(0.21, 0.21, 0.08, 18), this.metal('laton'), [1.2, 3.62, -2.6])
+    this.agregar(new THREE.CylinderGeometry(0.025, 0.025, 0.7, 8), this.metal('acero'), [-1.3, 3.45, -2.75])
     this.leds.push(
       this.agregar(new THREE.SphereGeometry(0.11, 20, 14), this.toon(COLOR_LED.listo, { emissive: COLOR_LED.listo, emissiveIntensity: 0.5 }), [-1.3, 3.86, -2.75]),
     )
@@ -728,6 +762,7 @@ export class EscenaTuring {
     }
     for (const l of [this.placaEstado, this.pantallaEstado, this.pantalla]) l.textura.dispose()
     this.gradiente.dispose()
+    for (const t of [...Object.values(this.texturas), ...Object.values(this.matcaps)]) t.dispose()
     vaciarCacheSimbolos()
     this.renderer.dispose()
     this.renderer.domElement.remove()

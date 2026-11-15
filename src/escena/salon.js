@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { aleatorio, texturaDe } from './materiales.js'
 
 export const PISO = -4
 const PARED_Z = -8
@@ -9,30 +10,6 @@ const ALTO_PARED = 18
 
 const TIZA = '"Segoe Print", "Caveat", "Comic Sans MS", cursive'
 const COLORES_LIBROS = ['#7a2e2e', '#2c4a6b', '#3f6b45', '#b8873b', '#5a3d5c', '#8a5a35', '#c9b48f', '#4d5f3a']
-
-function aleatorio(semilla) {
-  return () => {
-    semilla = (semilla + 0x6d2b79f5) | 0
-    let t = Math.imul(semilla ^ (semilla >>> 15), 1 | semilla)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
-function texturaDe(ancho, alto, dibujar, repetir = null) {
-  const c = document.createElement('canvas')
-  c.width = ancho
-  c.height = alto
-  dibujar(c.getContext('2d'), ancho, alto)
-  const t = new THREE.CanvasTexture(c)
-  t.colorSpace = THREE.SRGBColorSpace
-  t.anisotropy = 8
-  if (repetir) {
-    t.wrapS = t.wrapT = THREE.RepeatWrapping
-    t.repeat.set(...repetir)
-  }
-  return t
-}
 
 const tablones = (rng) =>
   texturaDe(1024, 1024, (ctx, w, h) => {
