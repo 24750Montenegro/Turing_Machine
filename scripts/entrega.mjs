@@ -145,7 +145,7 @@ function documentoInciso(M, completo, sinRechazo, resumen) {
     .sub { color: #5f584d; margin: 0 0 14px; } .formal p { margin: 2px 0; font-family: 'Cambria Math', 'Times New Roman', serif; font-size: 12pt; }
     table { border-collapse: collapse; width: 100%; font-size: 10pt; margin: 6px 0; } th, td { border: 1px solid #8d867a; padding: 4px 6px; text-align: left; }
     th { background: #f1e9da; } td { font-family: 'Cambria Math', 'Times New Roman', serif; } .papeles td { font-family: inherit; }
-    figure { margin: 10px 0; break-inside: avoid; text-align: center; } figure svg { max-width: 100%; height: auto; } figcaption { font-size: 9.5pt; color: #5f584d; }
+    figure { margin: 10px 0; break-inside: avoid; text-align: center; } figure svg { max-width: 100%; height: auto; max-height: 88mm; } figcaption { font-size: 9.5pt; color: #5f584d; }
     ol { margin: 4px 0; padding-left: 22px; } .nota { font-size: 10pt; color: #5f584d; } pre { font: 10pt 'Cambria Math', Consolas, monospace; background: #f8f2e7; padding: 8px; }
   </style></head><body>
   <h1>Inciso b) Máquina de Turing con aceptación, rechazo y ciclo infinito</h1>
