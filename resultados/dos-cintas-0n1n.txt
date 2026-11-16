@@ -1,6 +1,6 @@
 SIMULACIÓN DE UNA MÁQUINA DE TURING DETERMINISTA
 ================================================
-Generado: 15/11/2026, 9:17:29 p. m.
+Generado: 15/11/2026, 9:31:24 p. m.
 
 
 1. Especificación
@@ -32,8 +32,8 @@ Combinaciones no definidas (70): se asume δ(q, a₁, …, aₖ) = (qreject, a�
 [✓] qreject ≠ qaccept
 [✓] δ: Q × Γ² → Q × Γ² × {L, R, S}²
 [✓] δ es una función: a lo sumo una imagen por cada (q, a₁, …, aₖ) con k = 2
-[!] δ está definida en todo (Q − {qaccept, qreject}) × Γ²
-      δ no está definida en 70 de las 75 combinaciones (q, a₁, …, aₖ). Se asume δ(q, a₁, …, aₖ) = (qreject, a₁, …, aₖ, R, …, R)
+[✓] δ está definida en todo (Q − {qaccept, qreject}) × Γ²
+      Las 70 combinaciones (q, a₁, …, aₖ) que no se escriben van a qreject: δ(q, a₁, …, aₖ) = (qreject, a₁, …, aₖ, R, …, R)
 [✓] w ∈ Σ*
 
 

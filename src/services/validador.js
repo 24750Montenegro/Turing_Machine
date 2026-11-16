@@ -119,18 +119,19 @@ export function verificar({ definicion, transiciones, entrada }) {
       // Con k cintas hay |Γ|ᵏ lecturas por estado; las que faltan se resuelven al simular (maquina.js, haciaRechazo).
       sinDefinir = (Q.length - 2) * Gamma.length ** k - explicitas.length
     }
-    comprobar(
-      `δ está definida en todo (Q − {qaccept, qreject}) × Γ${potencia}`,
-      implicitas.length || sinDefinir
-        ? [{
-            seccion: 'transiciones',
-            mensaje: k === 1
-              ? `δ no está definida en ${implicitas.length} par(es): ${implicitas.map((t) => `(${t.q}, ${t.a})`).join(', ')}. Se asume δ(q, a) = (qreject, a, R)`
-              : `δ no está definida en ${sinDefinir} de las ${sinDefinir + explicitas.length} combinaciones (q, a₁, …, aₖ). Se asume δ(q, a₁, …, aₖ) = (qreject, a₁, …, aₖ, R, …, R)`,
-          }]
-        : [],
-      { nivel: 'advertencia', seccion: 'transiciones' },
-    )
+    const total = `δ está definida en todo (Q − {qaccept, qreject}) × Γ${potencia}`
+    if (k === 1) {
+      comprobar(total, implicitas.length
+        ? [{ seccion: 'transiciones', mensaje: `δ no está definida en ${implicitas.length} par(es): ${implicitas.map((t) => `(${t.q}, ${t.a})`).join(', ')}. Se asume δ(q, a) = (qreject, a, R)` }]
+        : [], { nivel: 'advertencia', seccion: 'transiciones' })
+    } else {
+      // Con k cintas no se escriben las |Γ|ᵏ lecturas de cada estado: lo que falta va a qreject por convención y solo se informa.
+      comprobaciones.push({
+        regla: total,
+        estado: 'ok',
+        detalle: sinDefinir ? [`Las ${sinDefinir} combinaciones (q, a₁, …, aₖ) que no se escriben van a qreject: δ(q, a₁, …, aₖ) = (qreject, a₁, …, aₖ, R, …, R)`] : [],
+      })
+    }
   }
 
   if (Sigma) {

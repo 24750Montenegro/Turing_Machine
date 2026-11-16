@@ -104,6 +104,7 @@ test('Simula una máquina de dos cintas', async ({ page }) => {
   const errores = await abrir(page)
   await page.getByRole('button', { name: 'Ejemplos' }).click()
   await page.getByRole('button', { name: /Dos cintas/ }).click()
+  await expect(page.locator('.mensaje.aviso, .mensaje.error')).toHaveCount(0)
   await expect(await simularHastaElFinal(page)).toHaveText('M acepta w')
   await expect(page.locator('.config-grande').first()).toContainText('(0011⊔qaccept, $qacceptxx⊔)')
 

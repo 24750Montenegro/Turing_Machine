@@ -19,6 +19,8 @@ const dosCintas = (transiciones, { Gamma = '{a, b, ⊔}', entrada = 'w = a' } = 
 test('Dos cintas: cada configuración es (u₁qv₁, u₂qv₂)', () => {
   const v = conEntrada('0011')
   assert.ok(v.valida, JSON.stringify(v.errores))
+  assert.deepEqual(v.advertencias, [])
+  assert.ok(v.comprobaciones.some((c) => c.estado === 'ok' && /70 combinaciones .* van a qreject/.test(c.detalle.join(''))))
   assert.deepEqual(traza(simular(v.maquina, v.w)), [
     '(q10011, q1⊔)',
     '(q20011, $q2⊔)',
