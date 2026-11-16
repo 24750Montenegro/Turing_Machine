@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { separarEspecificacion } from './services/parser.js'
 import { verificar } from './services/validador.js'
 import { LIMITE_PREDETERMINADO, simular } from './services/simulador.js'
-import { configuracionATexto, configuracionInicial } from './services/maquina.js'
-import { conSubindice, transicionATexto } from './services/notacion.js'
+import { cintasDe, configuracionATexto, configuracionInicial } from './services/maquina.js'
+import { conSubindice, firmaDelta, transicionATexto } from './services/notacion.js'
 import { especificacionATexto, maquinaATexto, nombreConfiguracion, reporteATexto } from './services/exportador.js'
 import { descargarTexto, elegirArchivoTexto } from './utils/archivos.js'
 import { useHistorial } from './utils/historial.js'
@@ -69,6 +69,7 @@ export default function App() {
   const [cargaPendiente, setCargaPendiente] = useState(null)
   const [versionDiagrama, setVersionDiagrama] = useState(0)
   const [movimiento, setMovimiento] = useState(null)
+  const [cintaVisible, setCintaVisible] = useState(0)
   const previo = useRef({ id: null, indice: -1 })
 
   useEffect(() => guardar(ALMACEN, textos), [textos])
@@ -199,33 +200,37 @@ export default function App() {
   const terminado = Boolean(sim) && indice === total
   const situacion = !sim ? 'listo' : terminado ? sim.resultado : 'ejecutando'
 
+  const numeroDeCintas = C ? cintasDe(C).length : 1
   const cuadro = useMemo(() => {
     if (!C) return null
     const M = ejecucion?.verificacion.maquina ?? verificacion.maquina
     const aplicadaEnPizarra = sim && indice > 0 ? sim.pasos[indice].transicion : null
+    const k = Math.min(cintaVisible, cintasDe(C).length - 1)
+    const vista = cintasDe(C)[k]
     return {
       id: ejecucion?.id ?? 'previa',
       indice: sim ? indice : 0,
-      cinta: C.u + C.v,
-      cabeza: C.u.length,
+      cinta: vista.u + vista.v,
+      cabeza: vista.u.length,
       estado: C.q,
       situacion,
       pantalla: !sim ? 'LISTO' : terminado ? PANTALLA[sim.resultado] : `PASO ${indice}/${total}`,
-      escritura: sim && indice > 0 ? sim.pasos[indice - 1].configuracion.u.length : null,
+      escritura: sim && indice > 0 ? cintasDe(sim.pasos[indice - 1].configuracion)[k].u.length : null,
       duracion: !sim ? 0 : depuracion ? Math.min(1500, ms * 0.9) : ms * 0.95,
       pizarra: {
         maquina: M ? maquinaATexto(M)[0] : '',
+        firma: firmaDelta(M?.cintas),
         configuracion: `${nombreConfiguracion(sim ? indice : 0)} = ${configuracionATexto(C)}`,
         transicion: aplicadaEnPizarra ? transicionATexto(aplicadaEnPizarra, conSubindice) : '',
         resultado: terminado ? PIZARRA[sim.resultado] : '',
       },
     }
-  }, [C, ejecucion, sim, indice, situacion, terminado, total, depuracion, ms, verificacion.maquina])
+  }, [C, ejecucion, sim, indice, situacion, terminado, total, depuracion, ms, verificacion.maquina, cintaVisible])
 
   const enSimulacion = Boolean(sim) && !desactualizada
   const aplicada = enSimulacion && indice > 0 ? pasoActual.transicion : null
   const anterior = enSimulacion && indice > 0 ? sim.pasos[indice - 1].configuracion : null
-  const paso = enSimulacion ? { indice, C, anterior, escrita: anterior?.u.length ?? null, transicion: aplicada } : null
+  const paso = enSimulacion ? { indice, C, anterior, transicion: aplicada } : null
 
   useEffect(() => {
     const p = previo.current
@@ -268,7 +273,7 @@ export default function App() {
             />
             <EditorSeccion
               titulo="Transiciones"
-              formula="δ: Q × Γ → Q × Γ × {L, R}"
+              formula={firmaDelta(verificacion.maquina?.cintas)}
               valor={textos.transiciones}
               onCambio={actualizar('transiciones')}
               onImportar={() => importarSeccion('transiciones')}
@@ -328,7 +333,14 @@ export default function App() {
 
             <div className="escenario-cuerpo">
               <div className={`capa ${pestana === 'maquina' ? 'visible' : ''}`}>
-                <VisorMaquina cuadro={cuadro} vista={vista} onVista={setVista} />
+                <VisorMaquina
+                  cuadro={cuadro}
+                  vista={vista}
+                  onVista={setVista}
+                  cintas={numeroDeCintas}
+                  cinta={Math.min(cintaVisible, numeroDeCintas - 1)}
+                  onCinta={setCintaVisible}
+                />
               </div>
               {pestana === 'diagrama' && (
                 <div className="capa visible">

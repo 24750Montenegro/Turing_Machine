@@ -725,6 +725,27 @@ p {
   box-shadow: var(--sombra-chica);
 }
 
+.visor-cintas {
+  position: absolute;
+  top: 62px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 3px 3px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: var(--panel);
+  border: 2px solid var(--tinta);
+  border-radius: 11px;
+  box-shadow: var(--sombra-chica);
+}
+
+.visor-cintas span {
+  margin-right: 6px;
+  color: var(--tinta-suave);
+}
+
 .visor-ayuda {
   position: absolute;
   right: 12px;
@@ -1249,6 +1270,22 @@ input[type='range'] {
   font-family: var(--mono);
   font-size: 13.5px;
   overflow-wrap: anywhere;
+}
+
+.desglose-cintas {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.desglose-cintas dt {
+  flex: none;
+  min-width: 52px;
+}
+
+.explicacion-cintas {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 3px;
 }
 
 .cinta-plana {

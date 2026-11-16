@@ -207,7 +207,7 @@ function ubicar(geometria, x, y, z, giroY = 0, giroZ = 0) {
   return geometria
 }
 
-function dibujarPizarra(lienzo, { maquina = '', configuracion = '', transicion = '', resultado = '' }, ruido) {
+function dibujarPizarra(lienzo, { maquina = '', firma = '', configuracion = '', transicion = '', resultado = '' }, ruido) {
   const ctx = lienzo.getContext('2d')
   const { width: w, height: h } = lienzo
   ctx.fillStyle = '#2f4a3a'
@@ -241,7 +241,7 @@ function dibujarPizarra(lienzo, { maquina = '', configuracion = '', transicion =
   t.quadraticCurveTo(450, 146, 840, 162)
   t.stroke()
   escribir(maquina, 90, 270, 60, '#f4f4ee')
-  escribir('δ: Q × Γ → Q × Γ × {L, R}', 90, 370, 56, '#f4f4ee')
+  escribir(firma || 'δ: Q × Γ → Q × Γ × {L, R}', 90, 370, 56, '#f4f4ee')
   escribir('Configuración actual', 1100, 130, 64, '#b9e3ff')
   escribir(configuracion, 1100, 240, 72, '#f4f4ee', w * 0.43)
   escribir(transicion, 1100, 350, 64, '#f4f4ee', w * 0.43)
@@ -306,7 +306,7 @@ export function crearSalon(gradiente) {
     manchas: Array.from({ length: 14 }, () => [rng() * 2048, rng() * 700, 80 + rng() * 220, 0.03 + rng() * 0.05]),
     poros: Array.from({ length: 9000 }, () => [rng() * 2048, rng() * 700, 1 + rng() * 2.5]),
   }
-  let pendiente = { maquina: '', configuracion: '', transicion: '', resultado: '' }
+  let pendiente = { maquina: '', firma: '', configuracion: '', transicion: '', resultado: '' }
   let ultimo = 0
   let sucio = true
 
@@ -374,7 +374,7 @@ export function crearSalon(gradiente) {
     hoja.scale(1, 1.4, 0.6)
     planta.push(pintar(ubicar(hoja, 20.5 + Math.cos(a) * 0.9, PISO + 2.6 + rng() * 1.6, -5.6 + Math.sin(a) * 0.9, a, 0.4), rng() < 0.5 ? '#4f8a4b' : '#5f9b52'))
   }
-  agregar(mergeGeometries(planta), toon('#ffffff', { vertexColors: true, flatShading: true }), [0, 0, 0])
+  agregar(mergeGeometries(planta), toon('#ffffff', { vertexColors: true }), [0, 0, 0])
 
   const silla = []
   const sx = 13.4
@@ -389,7 +389,7 @@ export function crearSalon(gradiente) {
 
   agregar(new THREE.CylinderGeometry(0.75, 0.6, 1.6, 18, 1, true), toon('#6e6a5e', { side: THREE.DoubleSide }), [-12.6, PISO + 0.8, 3.6])
   for (let i = 0; i < 4; i++) {
-    agregar(new THREE.IcosahedronGeometry(0.28, 0), toon('#f2ead8', { flatShading: true }), [-12.6 + (rng() - 0.5) * 1.6, PISO + 0.25, 3.6 + 1 + rng() * 1.2])
+    agregar(new THREE.IcosahedronGeometry(0.28, 0), toon('#f2ead8'), [-12.6 + (rng() - 0.5) * 1.6, PISO + 0.25, 3.6 + 1 + rng() * 1.2])
   }
 
   const lampara = new THREE.Group()
@@ -434,7 +434,7 @@ export function crearSalon(gradiente) {
   grupo.add(globo)
 
   agregar(new THREE.CylinderGeometry(0.28, 0.32, 0.38, 16), toon('#1f2a3a'), [8.85, 0.19, 2.6])
-  const pluma = agregar(new THREE.ConeGeometry(0.12, 1.5, 6), toon('#f4efe4', { flatShading: true }), [8.95, 0.85, 2.55])
+  const pluma = agregar(new THREE.ConeGeometry(0.12, 1.5, 6), toon('#f4efe4'), [8.95, 0.85, 2.55])
   pluma.rotation.z = -0.35
   pluma.rotation.x = 0.15
   for (const [x, z, giro] of [[-4.2, 2.95, 0.12], [-3.5, 3.0, -0.08], [4.4, 3.0, 0.2]]) {
@@ -445,7 +445,7 @@ export function crearSalon(gradiente) {
   return {
     grupo,
     pizarra(datos) {
-      const claves = ['maquina', 'configuracion', 'transicion', 'resultado']
+      const claves = ['maquina', 'firma', 'configuracion', 'transicion', 'resultado']
       if (claves.every((k) => (datos[k] ?? '') === pendiente[k])) return
       pendiente = Object.fromEntries(claves.map((k) => [k, datos[k] ?? '']))
       sucio = true

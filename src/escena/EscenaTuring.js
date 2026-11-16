@@ -442,7 +442,7 @@ export class EscenaTuring {
     )
 
     this.humos = Array.from({ length: 8 }, () => {
-      const material = this.toon('#ffffff', { transparent: true, opacity: 0, depthWrite: false, flatShading: true, emissive: '#ffffff', emissiveIntensity: 0.3 })
+      const material = this.toon('#ffffff', { transparent: true, opacity: 0, depthWrite: false, emissive: '#ffffff', emissiveIntensity: 0.3 })
       const malla = this.agregar(new THREE.IcosahedronGeometry(0.22, 1), material, [1.2, 3.7, -2.6], { sombra: false, recibe: false, contorno: false })
       malla.visible = false
       return { malla, t0: -1 }

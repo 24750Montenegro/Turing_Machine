@@ -1,5 +1,5 @@
 import { analizarDefinicion, analizarTransiciones, esEstadoValido, esSimboloValido } from './parser.js'
-import { MOVIMIENTOS, normalizarEstado, normalizarSimbolo, transicionATexto } from './notacion.js'
+import { MOVIMIENTOS, MOVIMIENTOS_CINTAS, normalizarEstado, normalizarSimbolo, piezas, transicionATexto } from './notacion.js'
 
 const ETIQUETAS = { Q: 'Q', Sigma: 'Σ', Gamma: 'Γ' }
 const RE_ETIQUETA = /^\s*(Q|Σ|Sigma|Γ|Gamma)\s*=/
@@ -123,22 +123,23 @@ export function asignarRol(textos, rol, q) {
 export function guardarTransicion(textos, datos, lineaOriginal = null) {
   const { def, transiciones } = leer(textos)
   if (!def.Q || !def.Gamma) return fallo('Primero define Q y Γ en la configuración')
-  const t = {
-    q: normalizarEstado(datos.q),
-    a: normalizarSimbolo(datos.a.trim()),
-    qj: normalizarEstado(datos.qj),
-    c: normalizarSimbolo(datos.c.trim()),
-    mov: datos.mov,
-  }
+  const partes = piezas(datos)
+  const leidos = partes.leidos.map((s) => normalizarSimbolo(s.trim()))
+  const escritos = partes.escritos.map((s) => normalizarSimbolo(s.trim()))
+  const { movs } = partes
+  const t = { q: normalizarEstado(datos.q), a: leidos.join(''), qj: normalizarEstado(datos.qj), c: escritos.join(''), mov: movs.join(''), leidos, escritos, movs }
+  const k = def.cintas
   if (!def.Q.includes(t.q) || !def.Q.includes(t.qj)) return fallo('Los estados de la transición deben pertenecer a Q')
   if (t.q === def.qaccept || t.q === def.qreject) return fallo('Los estados de parada no producen más configuraciones: no pueden tener transiciones de salida')
-  if (!MOVIMIENTOS.includes(t.mov)) return fallo('El movimiento debe ser L o R')
-  for (const s of [t.a, t.c]) if (!esSimboloValido(s)) return fallo(`"${s}" no es un símbolo válido: debe ser un solo carácter`)
+  if ([leidos, escritos, movs].some((xs) => xs.length !== k)) return fallo(`M tiene ${k} cinta(s): la transición debe leer, escribir y mover en cada una`)
+  if (k === 1 && !MOVIMIENTOS.includes(t.mov)) return fallo('El movimiento debe ser L o R')
+  if (k > 1 && !movs.every((d) => MOVIMIENTOS_CINTAS.includes(d))) return fallo('Cada movimiento debe ser L, R o S')
+  for (const s of [...leidos, ...escritos]) if (!esSimboloValido(s)) return fallo(`"${s}" no es un símbolo válido: debe ser un solo carácter`)
 
   const choque = transiciones.find((x) => x.q === t.q && x.a === t.a && x.linea !== lineaOriginal)
-  if (choque) return fallo(`δ(${t.q}, ${t.a}) ya está definida en la línea ${choque.linea}: δ debe ser una función`)
+  if (choque) return fallo(`δ(${[t.q, ...leidos].join(', ')}) ya está definida en la línea ${choque.linea}: δ debe ser una función`)
 
-  const nuevos = [...new Set([t.a, t.c])].filter((s) => !def.Gamma.includes(s))
+  const nuevos = [...new Set([...leidos, ...escritos])].filter((s) => !def.Gamma.includes(s))
   const resultado = nuevos.length ? escribirConjunto(textos, def, 'Gamma', [...def.Gamma, ...nuevos]) : textos
   const texto = transicionATexto(t)
   if (lineaOriginal) return exito({ ...resultado, transiciones: reescribir(resultado.transiciones, lineaOriginal, texto) })

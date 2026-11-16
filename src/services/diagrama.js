@@ -19,7 +19,14 @@ export function aristasDiagrama(M, { incluirImplicitas = false } = {}) {
 }
 
 // Notación de los diagramas de clase: "0 → x, R" escribe x; "0, 1 → R" deja el símbolo igual.
+// Con k cintas cada transición va en su línea: "0,⊔ → 0,$; S,R" o "1,x → R,L" si no cambia ningún símbolo.
 function agrupar(transiciones, orden) {
+  if (transiciones.some((t) => t.leidos?.length > 1)) {
+    return transiciones.map((t) => ({
+      simbolos: [t.a],
+      texto: `${t.leidos.join(',')} → ${t.c === t.a ? '' : `${t.escritos.join(',')}; `}${t.movs.join(',')}`,
+    }))
+  }
   const grupos = new Map()
   for (const t of transiciones) {
     const escrito = t.c === t.a ? null : t.c

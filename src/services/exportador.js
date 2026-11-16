@@ -1,4 +1,4 @@
-import { conSubindice as f, conjunto, subindice, transicionATexto } from './notacion.js'
+import { conSubindice as f, conjunto, firmaDelta, subindice, transicionATexto } from './notacion.js'
 import { configuracionATexto } from './maquina.js'
 import { ENCABEZADOS, analizarEntrada } from './parser.js'
 import { RESULTADOS } from './simulador.js'
@@ -22,6 +22,7 @@ export function maquinaATexto(M) {
     `Q = ${conjunto(M.Q, f)}`,
     `Σ = ${conjunto(M.Sigma)}`,
     `Γ = ${conjunto(M.Gamma)}`,
+    ...(M.cintas > 1 ? [`cintas = ${M.cintas}   (${firmaDelta(M.cintas)}; w va en la cinta 1)`] : []),
   ]
 }
 
@@ -48,6 +49,14 @@ export function explicarResultado(M, sim) {
   if (resultado === RESULTADOS.ciclo) {
     const [a, b] = [nombreConfiguracion(ciclo.desde), nombreConfiguracion(ciclo.hasta)]
     const q = f(pasos[ciclo.desde].configuracion.q)
+    if (Array.isArray(ciclo.desplazamiento)) {
+      return [
+        `En ${a} y en ${b} la máquina está en ${q} y, en cada cinta, todas las celdas desde la cabeza hacia la derecha contienen ⊔;`,
+        `entre ambas, ninguna cabeza estuvo a la izquierda de su posición en ${a}.`,
+        `Por lo tanto, desde ${b} se repite el mismo cálculo desplazado (${ciclo.desplazamiento.join(', ')}) celdas en las cintas, una y otra vez:`,
+        'M nunca se detiene sobre w (ciclo infinito), así que w ∉ L(M).',
+      ]
+    }
     return [
       `En ${a} y en ${b} la máquina está en ${q}, todas las celdas desde la cabeza hacia la derecha contienen ⊔`,
       `y entre ambas la cabeza nunca estuvo a la izquierda de su posición en ${a}.`,
@@ -85,6 +94,9 @@ export function reporteATexto(verificacion, sim, fecha = new Date()) {
     L.push('', 'Pares no definidos (se asumen hacia qreject):')
     L.push(...M.implicitas.map((t) => transicionATexto(t, f)))
   }
+  if (M.sinDefinir) {
+    L.push('', `Combinaciones no definidas (${M.sinDefinir}): se asume δ(q, a₁, …, aₖ) = (qreject, a₁, …, aₖ, R, …, R)`)
+  }
 
   titulo('2. Verificación de la especificación')
   for (const c of verificacion.comprobaciones) {
@@ -93,7 +105,7 @@ export function reporteATexto(verificacion, sim, fecha = new Date()) {
   }
 
   titulo('3. Entrada')
-  L.push(`w = ${sim.w || 'ε'}   (|w| = ${[...sim.w].length})`)
+  L.push(`w = ${sim.w || 'ε'}   (|w| = ${[...sim.w].length})${M.cintas > 1 ? '   en la cinta 1; las demás cintas empiezan en blanco' : ''}`)
   L.push(`Configuración inicial: ${nombreConfiguracion(0)} = ${configuracionATexto(sim.pasos[0].configuracion)}`)
 
   titulo('4. Configuraciones')

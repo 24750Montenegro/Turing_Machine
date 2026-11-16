@@ -1,0 +1,65 @@
+SIMULACIÓN DE UNA MÁQUINA DE TURING DETERMINISTA
+================================================
+Generado: 15/11/2026, 9:17:29 p. m.
+
+
+1. Especificación
+-----------------
+M = (Q, Σ, Γ, δ, q₁, qaccept, qreject)
+Q = {q₁, q₂, q₃, qaccept, qreject}
+Σ = {0, 1}
+Γ = {0, 1, x, $, ⊔}
+cintas = 2   (δ: Q × Γ² → Q × Γ² × {L, R, S}²; w va en la cinta 1)
+
+δ(q₁, 0, ⊔) = (q₂, 0, $, S, R)
+δ(q₂, 0, ⊔) = (q₂, 0, x, R, R)
+δ(q₂, 1, ⊔) = (q₃, 1, ⊔, S, L)
+δ(q₃, 1, x) = (q₃, 1, x, R, L)
+δ(q₃, ⊔, $) = (qaccept, ⊔, $, R, R)
+
+Combinaciones no definidas (70): se asume δ(q, a₁, …, aₖ) = (qreject, a₁, …, aₖ, R, …, R)
+
+
+2. Verificación de la especificación
+------------------------------------
+[✓] Q, Σ y Γ son conjuntos finitos no vacíos
+[✓] ⊔ ∉ Σ
+[✓] ⊔ ∈ Γ
+[✓] Σ ⊆ Γ
+[✓] q₀ ∈ Q
+[✓] qaccept ∈ Q
+[✓] qreject ∈ Q
+[✓] qreject ≠ qaccept
+[✓] δ: Q × Γ² → Q × Γ² × {L, R, S}²
+[✓] δ es una función: a lo sumo una imagen por cada (q, a₁, …, aₖ) con k = 2
+[!] δ está definida en todo (Q − {qaccept, qreject}) × Γ²
+      δ no está definida en 70 de las 75 combinaciones (q, a₁, …, aₖ). Se asume δ(q, a₁, …, aₖ) = (qreject, a₁, …, aₖ, R, …, R)
+[✓] w ∈ Σ*
+
+
+3. Entrada
+----------
+w = 0011   (|w| = 4)   en la cinta 1; las demás cintas empiezan en blanco
+Configuración inicial: C₁ = (q₁0011, q₁⊔)
+
+
+4. Configuraciones
+------------------
+Cᵢ = configuración                 transición aplicada
+C₁ = (q₁0011, q₁⊔)
+C₂ = (q₂0011, $q₂⊔)                δ(q₁, 0, ⊔) = (q₂, 0, $, S, R)
+C₃ = (0q₂011, $xq₂⊔)               δ(q₂, 0, ⊔) = (q₂, 0, x, R, R)
+C₄ = (00q₂11, $xxq₂⊔)              δ(q₂, 0, ⊔) = (q₂, 0, x, R, R)
+C₅ = (00q₃11, $xq₃x⊔)              δ(q₂, 1, ⊔) = (q₃, 1, ⊔, S, L)
+C₆ = (001q₃1, $q₃xx⊔)              δ(q₃, 1, x) = (q₃, 1, x, R, L)
+C₇ = (0011q₃⊔, q₃$xx⊔)             δ(q₃, 1, x) = (q₃, 1, x, R, L)
+C₈ = (0011⊔qaccept, $qacceptxx⊔)   δ(q₃, ⊔, $) = (qaccept, ⊔, $, R, R)
+
+
+5. Resultado
+------------
+M ACEPTA w
+Pasos ejecutados: 7
+
+C₈ = (0011⊔qaccept, $qacceptxx⊔) es una configuración de aceptación (su estado es qaccept).
+M acepta w, por lo tanto w ∈ L(M).

@@ -13,6 +13,7 @@ Simulador de máquinas de Turing deterministas con la notación del curso de Ló
 | Generar un .txt con las configuraciones | Botón *Exportar .txt* y `src/services/exportador.js` |
 | Inciso b: diagrama con aceptación, rechazo y ciclo infinito | [`docs/inciso-b.md`](docs/inciso-b.md) |
 | Archivos de entrada que aceptan, rechazan y ciclan | `ejemplos/inciso-b-*.txt` |
+| Archivos para Canvas (incisos a–i) | `npm run entrega` → carpeta `entrega/` ([ver abajo](#entrega-en-canvas)) |
 
 ## Uso
 
@@ -22,6 +23,8 @@ npm run dev          # aplicación web en http://localhost:5173
 npm test             # pruebas del cálculo formal
 npm run simular -- ejemplos/inciso-b-acepta.txt resultados/salida.txt
 npm run diagrama -- ejemplos/inciso-b-acepta.txt diagrama.svg
+npm run e2e          # pruebas de la página con Playwright
+npm run entrega      # genera la carpeta entrega/ para Canvas
 ```
 
 En la aplicación, los componentes (la "gramática"), las transiciones y la entrada se editan en tres secciones distintas. Cada una se puede escribir ahí mismo o importar desde un .txt; si el archivo trae la especificación completa, antes de cargarlo se muestra una vista previa con la sección a la que irá cada línea. En los editores, **Ctrl + Z** deshace y **Ctrl + Y** rehace, incluidos los cambios hechos desde el diagrama o al cargar archivos.
@@ -57,15 +60,51 @@ w = 0011
 - `w = ε` (o `w =`) es la cadena vacía.
 - Si δ(q, a) no está definida para algún q ∉ {qaccept, qreject}, se avisa y se asume δ(q, a) = (qreject, a, R), como en los diagramas de clase.
 
+### Varias cintas
+
+Por defecto la máquina tiene una cinta y todo funciona como arriba. Si hace falta, se agrega `cintas = k` en los componentes y se usa la definición de máquina de k cintas de Sipser:
+
+```text
+[componentes]
+M = (Q, Σ, Γ, δ, q1, qaccept, qreject)
+Q = {q1, q2, q3, qaccept, qreject}
+Σ = {0, 1}
+Γ = {0, 1, x, $, ⊔}
+cintas = 2
+
+[transiciones]
+δ(q1, 0, ⊔) = (q2, 0, $, S, R)
+```
+
+- δ: Q × Γᵏ → Q × Γᵏ × {L, R, S}ᵏ, escrita δ(qᵢ, a₁, …, aₖ) = (qⱼ, b₁, …, bₖ, D₁, …, Dₖ). S deja la cabeza en su lugar; con una sola cinta solo se permiten L y R, como en clase.
+- w va en la cinta 1 y las demás empiezan en blanco. Cada configuración es (u₁qv₁, …, uₖqvₖ): el mismo estado q y una cabeza por cinta, cada una con las reglas de "produce".
+- Las combinaciones (q, a₁, …, aₖ) sin definir van a qreject sin cambiar nada.
+- El depurador muestra todas las cintas; la máquina 3D muestra una a la vez (selector *Cinta*). Ejemplo: `ejemplos/dos-cintas-0n1n.txt`.
+
 ## Verificación
 
 Antes de simular se comprueba:
 
 - Q, Σ y Γ son conjuntos finitos no vacíos, ⊔ ∉ Σ, ⊔ ∈ Γ y Σ ⊆ Γ.
 - q₀, qaccept, qreject ∈ Q y qreject ≠ qaccept.
-- δ: Q × Γ → Q × Γ × {L, R}: cada transición usa estados de Q, símbolos de Γ y movimientos L o R.
+- δ: Q × Γ → Q × Γ × {L, R}: cada transición usa estados de Q, símbolos de Γ y movimientos L o R. Con `cintas = k`, cada transición lee, escribe y mueve en las k cintas, con movimientos L, R o S.
 - δ es una función (determinismo): no hay dos imágenes para el mismo par (q, a).
 - w ∈ Σ*.
+
+## Entrega en Canvas
+
+`npm run entrega` abre la aplicación en Microsoft Edge con Playwright y arma la carpeta `entrega/`:
+
+| Inciso | Archivo |
+|---|---|
+| a) Programa | `a-programa/maquina-de-turing.zip` (código del último commit) y `LEEME.txt` |
+| b) Diseño y diagrama | `b-diagrama/inciso-b-maquina.pdf`, `inciso-b-diagrama.png` y `.svg` |
+| c) Entrada que acepta / d) su salida | `c-entrada-aceptacion.txt` / `d-salida-aceptacion.txt` |
+| e) Entrada que rechaza / f) su salida | `e-entrada-rechazo.txt` / `f-salida-rechazo.txt` |
+| g) Entrada con ciclo / h) su salida | `g-entrada-ciclo.txt` / `h-salida-ciclo.txt` |
+| i) Ejecución y revisión | `i-ejecucion/LEEME.txt` y capturas |
+
+Cada entrada se carga con *Cargar especificación*, se simula hasta el final y se exporta con *Exportar .txt*; el script compara la salida exportada con la de los servicios y se detiene si no coinciden. En Windows usa el Edge instalado; en otro sistema se puede usar `PW_CANAL=chrome` o instalar Chromium con `npx playwright install chromium`.
 
 ## Arquitectura
 
@@ -87,7 +126,9 @@ src/
 ejemplos/            especificaciones de entrada
 resultados/          salidas generadas con npm run simular
 docs/                diseño y diagramas del inciso b
-tests/               pruebas de los servicios
+tests/               pruebas de los servicios (node --test)
+e2e/                 pruebas de la página con Playwright
+scripts/             simular, diagrama y entrega desde la terminal
 ```
 
 `produce` en `maquina.js` implementa las reglas de clase tal cual:

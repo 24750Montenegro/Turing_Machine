@@ -6,6 +6,7 @@ const RE_TUPLA = /^([^\s=]+)\s*=\s*\((.*)\)$/
 const RE_TRANSICION = /^(?:δ|delta)\s*\(([^()]*)\)\s*(?:=|→|->)\s*\(([^()]*)\)$/i
 const RE_ES_TRANSICION = /^(?:δ|delta)\s*\(/i
 const RE_ENTRADA = /^w\s*=\s*(.*)$/
+const RE_CINTAS = /^cintas\s*=\s*(\S+)$/i
 const RE_ESTADO = /^[^\s,(){}=]+$/
 const RESERVADOS = new Set([',', '(', ')', '{', '}'])
 
@@ -40,7 +41,7 @@ function crearRegistro(seccion) {
 
 export function analizarDefinicion(texto) {
   const r = crearRegistro('definicion')
-  const def = { nombre: 'M', Q: null, Sigma: null, Gamma: null, q0: null, qaccept: null, qreject: null }
+  const def = { nombre: 'M', Q: null, Sigma: null, Gamma: null, q0: null, qaccept: null, qreject: null, cintas: 1 }
   const lineas = { claves: {} }
 
   const asignar = (campo, valor, linea) => {
@@ -80,10 +81,16 @@ export function analizarDefinicion(texto) {
       asignar('q0', normalizarEstado(partes[4]), linea)
       asignar('qaccept', normalizarEstado(partes[5]), linea)
       asignar('qreject', normalizarEstado(partes[6]), linea)
+    } else if ((m = RE_CINTAS.exec(l))) {
+      const k = Number(m[1])
+      if (lineas.cintas) r.error(linea, 'El número de cintas se definió más de una vez')
+      else if (!Number.isInteger(k) || k < 1) r.error(linea, `"${m[1]}" no es un número de cintas válido: debe ser un entero k ≥ 1`)
+      else def.cintas = k
+      lineas.cintas = linea
     } else if (RE_ES_TRANSICION.test(l)) {
       r.error(linea, 'Las transiciones δ van en la sección de transiciones')
     } else {
-      r.error(linea, `Línea no reconocida: "${l}". Se esperaba la 7-tupla, Q = {…}, Σ = {…} o Γ = {…}`)
+      r.error(linea, `Línea no reconocida: "${l}". Se esperaba la 7-tupla, Q = {…}, Σ = {…}, Γ = {…} o cintas = k`)
     }
   }
   return { ...def, lineas, errores: r.errores, advertencias: r.advertencias }
@@ -114,16 +121,23 @@ export function analizarTransiciones(texto) {
     const m = RE_TRANSICION.exec(l)
     const izq = m?.[1].split(',').map((s) => s.trim())
     const der = m?.[2].split(',').map((s) => s.trim())
-    if (!m || izq.length !== 2 || der.length !== 3 || [...izq, ...der].includes('')) {
-      r.error(linea, `"${l}" no es una transición válida. Formato: δ(qᵢ, b) = (qⱼ, c, L) o δ(qᵢ, b) = (qⱼ, c, R)`)
+    const k = izq ? izq.length - 1 : 0
+    if (!m || k < 1 || der.length !== 2 * k + 1 || [...izq, ...der].includes('')) {
+      r.error(linea, `"${l}" no es una transición válida. Formato: δ(qᵢ, b) = (qⱼ, c, L) o δ(qᵢ, b) = (qⱼ, c, R); con k cintas, δ(qᵢ, b₁, …, bₖ) = (qⱼ, c₁, …, cₖ, D₁, …, Dₖ)`)
       continue
     }
+    const leidos = izq.slice(1).map(normalizarSimbolo)
+    const escritos = der.slice(1, k + 1).map(normalizarSimbolo)
+    const movs = der.slice(k + 1).map((d) => d.toUpperCase())
     transiciones.push({
       q: normalizarEstado(izq[0]),
-      a: normalizarSimbolo(izq[1]),
+      a: leidos.join(''),
       qj: normalizarEstado(der[0]),
-      c: normalizarSimbolo(der[1]),
-      mov: der[2].toUpperCase(),
+      c: escritos.join(''),
+      mov: movs.join(''),
+      leidos,
+      escritos,
+      movs,
       linea,
     })
   }

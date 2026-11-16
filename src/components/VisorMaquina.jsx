@@ -8,7 +8,7 @@ const VISTAS = [
   { id: 'frontal', etiqueta: 'Frontal', icono: 'frente' },
 ]
 
-export default function VisorMaquina({ cuadro, vista, onVista }) {
+export default function VisorMaquina({ cuadro, vista, onVista, cintas = 1, cinta = 0, onCinta }) {
   const contenedor = useRef(null)
   const escena = useRef(null)
 
@@ -39,6 +39,16 @@ export default function VisorMaquina({ cuadro, vista, onVista }) {
           </button>
         ))}
       </div>
+      {cintas > 1 && (
+        <div className="visor-cintas" role="group" aria-label="Cinta que muestra la máquina">
+          <span>Cinta</span>
+          {Array.from({ length: cintas }, (_, i) => (
+            <button key={i} className={`segmento ${cinta === i ? 'activo' : ''}`} onClick={() => onCinta(i)} aria-pressed={cinta === i}>
+              {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
       <p className="visor-ayuda">Arrastra para girar · rueda para acercar · clic derecho para mover</p>
     </div>
   )

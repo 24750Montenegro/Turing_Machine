@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { aristasDiagrama } from '../services/diagrama.js'
+import { cintasDe } from '../services/maquina.js'
 import { agregarEstado, siguienteEstado } from '../services/edicion.js'
 import { distribuir } from '../diagrama/distribucion.js'
 import { diagramaSVG, limitesDiagrama } from '../diagrama/svg.js'
@@ -230,15 +231,20 @@ export default function DiagramaEstados({
             {paso.transicion ? (
               <span>
                 <Transicion t={paso.transicion} />
-                <span className={`direccion direccion-${paso.transicion.mov}`}>
-                  {paso.transicion.mov === 'L' ? '← la cabeza va a la izquierda' : 'la cabeza va a la derecha →'}
-                </span>
+                {!paso.C.cintas && (
+                  <span className={`direccion direccion-${paso.transicion.mov}`}>
+                    {paso.transicion.mov === 'L' ? '← la cabeza va a la izquierda' : 'la cabeza va a la derecha →'}
+                  </span>
+                )}
               </span>
             ) : (
               <span className="nota">Configuración inicial</span>
             )}
           </p>
-          <CintaPlana C={paso.C} anterior={paso.anterior} escrita={paso.escrita} celdasVisibles={18} />
+          {cintasDe(paso.C).map((cinta, i) => {
+            const previa = paso.anterior ? cintasDe(paso.anterior)[i] : null
+            return <CintaPlana key={i} C={cinta} anterior={previa} escrita={previa ? previa.u.length : null} celdasVisibles={18} />
+          })}
         </div>
       ) : (
         <p className="diagrama-nota">

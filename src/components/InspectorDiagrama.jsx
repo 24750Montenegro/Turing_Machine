@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import {
   asignarRol,
   eliminarEstado,
@@ -6,7 +6,7 @@ import {
   guardarTransicion,
   renombrarEstado,
 } from '../services/edicion.js'
-import { conSubindice, normalizarEstado } from '../services/notacion.js'
+import { MOVIMIENTOS, MOVIMIENTOS_CINTAS, conSubindice, normalizarEstado, piezas } from '../services/notacion.js'
 import { Estado, Transicion } from './Notacion.jsx'
 import Icono from './Icono.jsx'
 
@@ -17,12 +17,23 @@ const ROLES = [
 ]
 const OTRO = '\u0000otro'
 
+// Primera lectura (a₁, …, aₖ) que todavía no tiene transición desde q.
+function lecturaLibre(Gamma, k, usados) {
+  const total = Math.min(Gamma.length ** k, 2000)
+  for (let n = 0; n < total; n++) {
+    const leidos = Array.from({ length: k }, (_, i) => Gamma[Math.floor(n / Gamma.length ** (k - 1 - i)) % Gamma.length])
+    if (!usados.has(leidos.join(''))) return leidos
+  }
+  return Array(k).fill(Gamma[0])
+}
+
 function valoresIniciales(M, desde, hacia) {
   const origenes = M.Q.filter((q) => q !== M.qaccept && q !== M.qreject)
   const q = origenes.includes(desde) ? desde : origenes[0]
   const usados = new Set(M.transiciones.filter((t) => t.q === q).map((t) => t.a))
-  const a = M.Gamma.find((s) => !usados.has(s)) ?? M.Gamma[0]
-  return { q, a, qj: hacia ?? q, c: a, mov: 'R' }
+  const k = M.cintas ?? 1
+  const leidos = lecturaLibre(M.Gamma, k, usados)
+  return { q, qj: hacia ?? q, leidos, escritos: [...leidos], movs: Array(k).fill('R') }
 }
 
 function SelectorSimbolo({ valor, Gamma, onCambio, etiqueta }) {
@@ -52,9 +63,16 @@ function SelectorSimbolo({ valor, Gamma, onCambio, etiqueta }) {
 function FormularioTransicion({ M, inicial, editando, onGuardar, onCancelar }) {
   const [t, setT] = useState(inicial)
   useEffect(() => setT(inicial), [inicial])
-  const cambiar = (campo) => (valor) =>
-    setT((x) => ({ ...x, [campo]: valor, ...(campo === 'a' && x.c === x.a ? { c: valor } : {}) }))
+  const cambiar = (campo) => (valor) => setT((x) => ({ ...x, [campo]: valor }))
+  const cambiarEn = (campo, i) => (valor) =>
+    setT((x) => {
+      const poner = (lista) => lista.map((v, j) => (j === i ? valor : v))
+      const sigue = campo === 'leidos' && x.escritos[i] === x.leidos[i]
+      return { ...x, [campo]: poner(x[campo]), ...(sigue ? { escritos: poner(x.escritos) } : {}) }
+    })
   const origenes = M.Q.filter((q) => q !== M.qaccept && q !== M.qreject)
+  const varias = t.leidos.length > 1
+  const enCinta = (texto, i) => (varias ? `${texto} en la cinta ${i + 1}` : texto)
 
   return (
     <form
@@ -72,24 +90,36 @@ function FormularioTransicion({ M, inicial, editando, onGuardar, onCancelar }) {
             <option key={q} value={q}>{conSubindice(q)}</option>
           ))}
         </select>
-        <span>,</span>
-        <SelectorSimbolo valor={t.a} Gamma={M.Gamma} onCambio={cambiar('a')} etiqueta="Símbolo leído" />
+        {t.leidos.map((a, i) => (
+          <Fragment key={`l${i}`}>
+            <span>,</span>
+            <SelectorSimbolo valor={a} Gamma={M.Gamma} onCambio={cambiarEn('leidos', i)} etiqueta={enCinta('Símbolo leído', i)} />
+          </Fragment>
+        ))}
         <span>) = (</span>
         <select value={t.qj} onChange={(e) => cambiar('qj')(e.target.value)} aria-label="Estado destino">
           {M.Q.map((q) => (
             <option key={q} value={q}>{conSubindice(q)}</option>
           ))}
         </select>
-        <span>,</span>
-        <SelectorSimbolo valor={t.c} Gamma={M.Gamma} onCambio={cambiar('c')} etiqueta="Símbolo escrito" />
-        <span>,</span>
-        <span className="mini-segmentos" role="group" aria-label="Movimiento">
-          {['L', 'R'].map((m) => (
-            <button type="button" key={m} className={t.mov === m ? 'activo' : ''} onClick={() => cambiar('mov')(m)}>
-              {m}
-            </button>
-          ))}
-        </span>
+        {t.escritos.map((c, i) => (
+          <Fragment key={`e${i}`}>
+            <span>,</span>
+            <SelectorSimbolo valor={c} Gamma={M.Gamma} onCambio={cambiarEn('escritos', i)} etiqueta={enCinta('Símbolo escrito', i)} />
+          </Fragment>
+        ))}
+        {t.movs.map((d, i) => (
+          <Fragment key={`m${i}`}>
+            <span>,</span>
+            <span className="mini-segmentos" role="group" aria-label={enCinta('Movimiento', i)}>
+              {(varias ? MOVIMIENTOS_CINTAS : MOVIMIENTOS).map((m) => (
+                <button type="button" key={m} className={d === m ? 'activo' : ''} onClick={() => cambiarEn('movs', i)(m)}>
+                  {m}
+                </button>
+              ))}
+            </span>
+          </Fragment>
+        ))}
         <span>)</span>
       </div>
       <div className="formulario-acciones">
@@ -155,7 +185,7 @@ export default function InspectorDiagrama({ maquina: M, textos, seleccion, onApl
 
   const editar = (t) => {
     setEdicion(t.linea)
-    setInicial({ q: t.q, a: t.a, qj: t.qj, c: t.c, mov: t.mov })
+    setInicial({ q: t.q, qj: t.qj, ...piezas(t) })
   }
   const eliminar = (t) => aplicar(eliminarTransicion(textos, t.linea), () => edicion === t.linea && setEdicion(null))
   const guardar = (t) =>

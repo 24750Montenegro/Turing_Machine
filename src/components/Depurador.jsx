@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { REGLAS, delta, esParada, simboloLeido } from '../services/maquina.js'
+import { REGLAS, cintasDe, esParada, produce } from '../services/maquina.js'
+import { piezas, transicionATexto } from '../services/notacion.js'
 import { explicarResultado } from '../services/exportador.js'
 import CintaPlana, { inicioVentana } from './CintaPlana.jsx'
 import { Configuracion, Estado, NombreConfiguracion, Simbolo, Transicion } from './Notacion.jsx'
@@ -12,7 +13,7 @@ const RESULTADO = {
   limite: { titulo: 'Sin resultado', icono: 'aviso' },
 }
 
-const MOVIMIENTO = { L: 'a la izquierda', R: 'a la derecha' }
+const MOVIMIENTO = { L: 'a la izquierda', R: 'a la derecha', S: 'no se mueve' }
 
 export default function Depurador({ ejecucion, indice, onIr, depuracion, previa, desactualizada, onExportar }) {
   if (!ejecucion) {
@@ -44,10 +45,12 @@ export default function Depurador({ ejecucion, indice, onIr, depuracion, previa,
   const total = sim.pasos.length - 1
   const C = sim.pasos[indice].configuracion
   const terminado = indice === total
-  const proxima = esParada(M, C.q) ? null : delta(M, C.q, simboloLeido(C))
-  const reglaProxima = !proxima ? null : proxima.mov === 'L' ? (C.u === '' ? 'borde' : 'izquierda') : C.v.length <= 1 && !esParada(M, proxima.qj) ? 'final' : 'derecha'
-  const escrita = indice > 0 ? sim.pasos[indice - 1].configuracion.u.length : null
-  const anterior = indice > 0 ? sim.pasos[indice - 1].configuracion : null
+  const siguiente = esParada(M, C.q) ? null : produce(M, C)
+  const proxima = siguiente?.transicion ?? null
+  const reglas = siguiente ? [].concat(siguiente.regla) : []
+  const cintas = cintasDe(C)
+  const anteriores = indice > 0 ? cintasDe(sim.pasos[indice - 1].configuracion) : null
+  const varias = cintas.length > 1
   const info = RESULTADO[sim.resultado]
 
   return (
@@ -71,17 +74,36 @@ export default function Depurador({ ejecucion, indice, onIr, depuracion, previa,
         <p className="config-grande">
           <NombreConfiguracion i={indice} /> = <Configuracion c={C} />
         </p>
-        {depuracion && (
+        {depuracion && !varias && (
           <dl className="desglose">
-            <div><dt>u</dt><dd>{C.u ? [...C.u].map((s, i) => <Simbolo key={i} s={s} />) : 'ε'}</dd></div>
+            <div><dt>u</dt><dd><Cadena s={C.u} /></dd></div>
             <div><dt>q</dt><dd><Estado q={C.q} /></dd></div>
-            <div><dt>v</dt><dd>{C.v ? [...C.v].map((s, i) => <Simbolo key={i} s={s} />) : 'ε'}</dd></div>
+            <div><dt>v</dt><dd><Cadena s={C.v} /></dd></div>
             <div><dt>cabeza</dt><dd>celda {C.u.length}</dd></div>
+          </dl>
+        )}
+        {depuracion && varias && (
+          <dl className="desglose desglose-cintas">
+            <div><dt>q</dt><dd><Estado q={C.q} /></dd></div>
+            {cintas.map(({ u, v }, i) => (
+              <div key={i}>
+                <dt>cinta {i + 1}</dt>
+                <dd>u = <Cadena s={u} /> · v = <Cadena s={v} /> · celda {u.length}</dd>
+              </div>
+            ))}
           </dl>
         )}
       </div>
 
-      {depuracion && <TarjetaCinta C={C} anterior={anterior} escrita={escrita} />}
+      {depuracion && cintas.map((cinta, i) => (
+        <TarjetaCinta
+          key={i}
+          titulo={varias ? `Cinta ${i + 1}` : 'Cinta'}
+          C={cinta}
+          anterior={anteriores?.[i] ?? null}
+          escrita={anteriores ? anteriores[i].u.length : null}
+        />
+      ))}
 
       {depuracion && (
         <div className="tarjeta">
@@ -98,12 +120,25 @@ export default function Depurador({ ejecucion, indice, onIr, depuracion, previa,
                 <Transicion t={proxima} />
                 {proxima.implicita && <span className="etiqueta-implicita">implícita</span>}
               </p>
-              <p className="explicacion">
-                Lee <Simbolo s={proxima.a} />, escribe <Simbolo s={proxima.c} />, mueve la cabeza {MOVIMIENTO[proxima.mov]} y pasa a <Estado q={proxima.qj} />.
-              </p>
-              <p className="regla">
-                <b>{REGLAS[reglaProxima].nombre}:</b> {REGLAS[reglaProxima].forma}
-              </p>
+              {varias ? (
+                <ul className="explicacion explicacion-cintas">
+                  {piezas(proxima).leidos.map((a, i) => (
+                    <li key={i}>
+                      Cinta {i + 1}: lee <Simbolo s={a} />, escribe <Simbolo s={proxima.escritos[i]} /> y la cabeza {MOVIMIENTO[proxima.movs[i]]} ({REGLAS[reglas[i]].nombre.toLowerCase()}).
+                    </li>
+                  ))}
+                  <li>M pasa a <Estado q={proxima.qj} />.</li>
+                </ul>
+              ) : (
+                <p className="explicacion">
+                  Lee <Simbolo s={proxima.a} />, escribe <Simbolo s={proxima.c} />, mueve la cabeza {MOVIMIENTO[proxima.mov]} y pasa a <Estado q={proxima.qj} />.
+                </p>
+              )}
+              {[...new Set(reglas)].map((r) => (
+                <p key={r} className="regla">
+                  <b>{REGLAS[r].nombre}:</b> {REGLAS[r].forma}
+                </p>
+              ))}
               {terminado && <p className="nota">La simulación se detuvo antes de aplicar esta transición.</p>}
             </>
           ) : (
@@ -133,11 +168,13 @@ export default function Depurador({ ejecucion, indice, onIr, depuracion, previa,
   )
 }
 
-function TarjetaCinta(props) {
+const Cadena = ({ s }) => (s ? [...s].map((x, i) => <Simbolo key={i} s={x} />) : 'ε')
+
+function TarjetaCinta({ titulo, ...props }) {
   const desde = inicioVentana(props.C)
   return (
     <div className="tarjeta">
-      <p className="tarjeta-titulo">Cinta {desde > 0 && <span className="nota">(desde la celda {desde})</span>}</p>
+      <p className="tarjeta-titulo">{titulo} {desde > 0 && <span className="nota">(desde la celda {desde})</span>}</p>
       <CintaPlana {...props} />
     </div>
   )
@@ -178,7 +215,7 @@ function ListaConfiguraciones({ sim, indice, onIr }) {
         className={`fila-config ${i === indice ? 'actual' : ''} ${i > indice ? 'futura' : ''} ${enCiclo ? 'en-ciclo' : ''}`}
         style={{ top: i * ALTO_FILA }}
         onClick={() => onIr(i)}
-        title={p.transicion ? `Producida por δ(${p.transicion.q}, ${p.transicion.a}) = (${p.transicion.qj}, ${p.transicion.c}, ${p.transicion.mov})` : 'Configuración inicial'}
+        title={p.transicion ? `Producida por ${transicionATexto(p.transicion)}` : 'Configuración inicial'}
       >
         <NombreConfiguracion i={i} />
         <Configuracion c={p.configuracion} resaltar={false} />
