@@ -2,6 +2,8 @@ import { esParada } from '../services/maquina.js'
 
 export const SEPARACION_X = 220
 export const SEPARACION_Y = 175
+const MAX_COLUMNAS = 10
+const POR_FILA = 7
 
 export function distribuir(M, aristas) {
   const normales = M.Q.filter((q) => !esParada(M, q))
@@ -37,20 +39,31 @@ export function distribuir(M, aristas) {
     orden.forEach((q, i) => (pos[q] = { x: n * SEPARACION_X, y: ys[i] + ajuste }))
   })
 
+  let anchoColumnas = columnas.length
+  if (columnas.length > MAX_COLUMNAS) {
+    const yS = Object.values(pos).map((p) => p.y)
+    const altoFila = Math.max(...yS) - Math.min(...yS) + SEPARACION_Y * 1.4
+    anchoColumnas = POR_FILA
+    columnas.forEach((qs, n) => {
+      const fila = Math.floor(n / POR_FILA)
+      const lugar = fila % 2 ? POR_FILA - 1 - (n % POR_FILA) : n % POR_FILA
+      for (const q of qs ?? []) pos[q] = { x: lugar * SEPARACION_X, y: pos[q].y + fila * altoFila }
+    })
+  }
+
   const ys = Object.values(pos).map((p) => p.y)
   const fondo = (ys.length ? Math.max(...ys) : 0) + SEPARACION_Y * 1.15
-  const centro = ((columnas.length - 1) * SEPARACION_X) / 2
-  const parada = [M.qaccept, M.qreject]
+  const centro = ((anchoColumnas - 1) * SEPARACION_X) / 2
+  const parada = M.Q.filter((q) => esParada(M, q))
     .map((q) => {
       const previos = predecesores(q).filter((p) => pos[p])
       return { q, x: previos.length ? promedio(previos, (p) => pos[p].x) : centro }
     })
     .sort((a, b) => a.x - b.x)
-  const [a, b] = parada
-  if (b.x - a.x < SEPARACION_X) {
-    const medio = (a.x + b.x) / 2
-    a.x = medio - SEPARACION_X / 2
-    b.x = medio + SEPARACION_X / 2
+  for (let i = 1; i < parada.length; i++) parada[i].x = Math.max(parada[i].x, parada[i - 1].x + SEPARACION_X)
+  if (parada.length) {
+    const corrimiento = promedio(parada, (p) => p.x) - (parada[0].x + parada.at(-1).x) / 2
+    for (const p of parada) p.x += corrimiento
   }
   for (const { q, x } of parada) pos[q] = { x, y: fondo }
   return pos
