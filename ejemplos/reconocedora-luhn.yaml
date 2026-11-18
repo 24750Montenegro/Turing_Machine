@@ -1,0 +1,3646 @@
+---
+# MT reconocedora: tarjetas de 13 a 19 dígitos válidas según Luhn. Generado con npm run luhn.
+# c0…c19 cuentan los dígitos; sumar/doblar recorren de derecha a izquierda con la suma mod 10 en caché.
+q_states:
+  q_list:
+  - 'c0'
+  - 'c1'
+  - 'c2'
+  - 'c3'
+  - 'c4'
+  - 'c5'
+  - 'c6'
+  - 'c7'
+  - 'c8'
+  - 'c9'
+  - 'c10'
+  - 'c11'
+  - 'c12'
+  - 'c13'
+  - 'c14'
+  - 'c15'
+  - 'c16'
+  - 'c17'
+  - 'c18'
+  - 'c19'
+  - 'sumar'
+  - 'doblar'
+  - 'acepta'
+  initial: 'c0'
+  final: 'acepta'
+alphabet:
+- '0'
+- '1'
+- '2'
+- '3'
+- '4'
+- '5'
+- '6'
+- '7'
+- '8'
+- '9'
+tape_alphabet:
+-
+delta:
+# contar los dígitos
+- params:
+    initial_state: 'c0'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c1'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c0'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c1'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c0'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c1'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c0'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c1'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c0'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c1'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c0'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c1'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c0'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c1'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c0'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c1'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c0'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c1'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c0'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c1'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c1'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c2'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c1'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c2'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c1'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c2'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c1'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c2'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c1'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c2'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c1'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c2'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c1'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c2'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c1'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c2'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c1'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c2'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c1'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c2'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c2'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c3'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c2'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c3'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c2'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c3'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c2'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c3'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c2'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c3'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c2'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c3'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c2'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c3'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c2'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c3'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c2'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c3'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c2'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c3'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c3'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c4'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c3'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c4'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c3'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c4'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c3'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c4'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c3'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c4'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c3'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c4'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c3'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c4'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c3'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c4'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c3'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c4'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c3'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c4'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c4'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c5'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c4'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c5'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c4'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c5'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c4'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c5'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c4'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c5'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c4'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c5'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c4'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c5'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c4'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c5'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c4'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c5'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c4'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c5'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c5'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c6'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c5'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c6'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c5'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c6'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c5'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c6'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c5'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c6'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c5'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c6'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c5'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c6'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c5'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c6'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c5'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c6'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c5'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c6'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c6'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c7'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c6'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c7'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c6'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c7'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c6'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c7'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c6'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c7'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c6'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c7'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c6'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c7'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c6'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c7'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c6'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c7'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c6'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c7'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c7'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c8'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c7'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c8'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c7'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c8'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c7'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c8'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c7'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c8'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c7'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c8'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c7'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c8'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c7'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c8'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c7'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c8'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c7'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c8'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c8'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c9'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c8'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c9'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c8'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c9'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c8'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c9'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c8'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c9'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c8'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c9'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c8'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c9'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c8'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c9'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c8'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c9'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c8'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c9'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c9'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c10'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c9'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c10'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c9'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c10'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c9'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c10'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c9'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c10'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c9'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c10'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c9'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c10'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c9'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c10'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c9'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c10'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c9'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c10'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c10'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c11'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c10'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c11'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c10'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c11'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c10'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c11'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c10'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c11'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c10'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c11'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c10'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c11'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c10'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c11'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c10'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c11'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c10'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c11'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c11'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c12'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c11'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c12'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c11'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c12'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c11'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c12'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c11'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c12'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c11'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c12'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c11'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c12'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c11'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c12'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c11'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c12'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c11'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c12'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c12'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c13'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c12'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c13'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c12'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c13'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c12'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c13'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c12'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c13'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c12'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c13'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c12'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c13'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c12'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c13'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c12'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c13'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c12'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c13'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c13'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c14'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c13'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c14'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c13'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c14'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c13'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c14'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c13'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c14'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c13'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c14'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c13'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c14'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c13'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c14'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c13'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c14'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c13'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c14'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c14'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c15'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c14'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c15'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c14'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c15'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c14'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c15'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c14'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c15'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c14'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c15'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c14'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c15'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c14'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c15'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c14'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c15'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c14'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c15'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c15'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c16'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c15'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c16'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c15'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c16'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c15'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c16'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c15'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c16'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c15'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c16'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c15'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c16'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c15'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c16'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c15'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c16'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c15'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c16'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c16'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c17'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c16'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c17'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c16'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c17'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c16'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c17'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c16'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c17'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c16'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c17'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c16'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c17'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c16'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c17'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c16'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c17'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c16'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c17'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c17'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c18'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c17'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c18'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c17'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c18'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c17'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c18'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c17'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c18'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c17'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c18'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c17'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c18'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c17'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c18'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c17'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c18'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c17'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c18'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+- params:
+    initial_state: 'c18'
+    mem_cache_value:
+    tape_input: '0'
+  output:
+    final_state: 'c19'
+    mem_cache_value:
+    tape_output: '0'
+    tape_displacement: R
+- params:
+    initial_state: 'c18'
+    mem_cache_value:
+    tape_input: '1'
+  output:
+    final_state: 'c19'
+    mem_cache_value:
+    tape_output: '1'
+    tape_displacement: R
+- params:
+    initial_state: 'c18'
+    mem_cache_value:
+    tape_input: '2'
+  output:
+    final_state: 'c19'
+    mem_cache_value:
+    tape_output: '2'
+    tape_displacement: R
+- params:
+    initial_state: 'c18'
+    mem_cache_value:
+    tape_input: '3'
+  output:
+    final_state: 'c19'
+    mem_cache_value:
+    tape_output: '3'
+    tape_displacement: R
+- params:
+    initial_state: 'c18'
+    mem_cache_value:
+    tape_input: '4'
+  output:
+    final_state: 'c19'
+    mem_cache_value:
+    tape_output: '4'
+    tape_displacement: R
+- params:
+    initial_state: 'c18'
+    mem_cache_value:
+    tape_input: '5'
+  output:
+    final_state: 'c19'
+    mem_cache_value:
+    tape_output: '5'
+    tape_displacement: R
+- params:
+    initial_state: 'c18'
+    mem_cache_value:
+    tape_input: '6'
+  output:
+    final_state: 'c19'
+    mem_cache_value:
+    tape_output: '6'
+    tape_displacement: R
+- params:
+    initial_state: 'c18'
+    mem_cache_value:
+    tape_input: '7'
+  output:
+    final_state: 'c19'
+    mem_cache_value:
+    tape_output: '7'
+    tape_displacement: R
+- params:
+    initial_state: 'c18'
+    mem_cache_value:
+    tape_input: '8'
+  output:
+    final_state: 'c19'
+    mem_cache_value:
+    tape_output: '8'
+    tape_displacement: R
+- params:
+    initial_state: 'c18'
+    mem_cache_value:
+    tape_input: '9'
+  output:
+    final_state: 'c19'
+    mem_cache_value:
+    tape_output: '9'
+    tape_displacement: R
+# 13 a 19 dígitos: empezar con suma 0
+- params:
+    initial_state: 'c13'
+    mem_cache_value:
+    tape_input:
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output:
+    tape_displacement: L
+- params:
+    initial_state: 'c14'
+    mem_cache_value:
+    tape_input:
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output:
+    tape_displacement: L
+- params:
+    initial_state: 'c15'
+    mem_cache_value:
+    tape_input:
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output:
+    tape_displacement: L
+- params:
+    initial_state: 'c16'
+    mem_cache_value:
+    tape_input:
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output:
+    tape_displacement: L
+- params:
+    initial_state: 'c17'
+    mem_cache_value:
+    tape_input:
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output:
+    tape_displacement: L
+- params:
+    initial_state: 'c18'
+    mem_cache_value:
+    tape_input:
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output:
+    tape_displacement: L
+- params:
+    initial_state: 'c19'
+    mem_cache_value:
+    tape_input:
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output:
+    tape_displacement: L
+# sumar: suma d
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '0'
+    tape_input: '0'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '0'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '0'
+    tape_input: '1'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '1'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '0'
+    tape_input: '2'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '2'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '0'
+    tape_input: '3'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '3'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '0'
+    tape_input: '4'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '4'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '0'
+    tape_input: '5'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '5'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '0'
+    tape_input: '6'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '6'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '0'
+    tape_input: '7'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '7'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '0'
+    tape_input: '8'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '8'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '0'
+    tape_input: '9'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '9'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '1'
+    tape_input: '0'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '1'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '1'
+    tape_input: '1'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '2'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '1'
+    tape_input: '2'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '3'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '1'
+    tape_input: '3'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '4'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '1'
+    tape_input: '4'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '5'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '1'
+    tape_input: '5'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '6'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '1'
+    tape_input: '6'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '7'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '1'
+    tape_input: '7'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '8'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '1'
+    tape_input: '8'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '9'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '1'
+    tape_input: '9'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '0'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '2'
+    tape_input: '0'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '2'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '2'
+    tape_input: '1'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '3'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '2'
+    tape_input: '2'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '4'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '2'
+    tape_input: '3'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '5'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '2'
+    tape_input: '4'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '6'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '2'
+    tape_input: '5'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '7'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '2'
+    tape_input: '6'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '8'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '2'
+    tape_input: '7'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '9'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '2'
+    tape_input: '8'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '0'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '2'
+    tape_input: '9'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '1'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '3'
+    tape_input: '0'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '3'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '3'
+    tape_input: '1'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '4'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '3'
+    tape_input: '2'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '5'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '3'
+    tape_input: '3'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '6'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '3'
+    tape_input: '4'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '7'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '3'
+    tape_input: '5'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '8'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '3'
+    tape_input: '6'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '9'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '3'
+    tape_input: '7'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '0'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '3'
+    tape_input: '8'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '1'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '3'
+    tape_input: '9'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '2'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '4'
+    tape_input: '0'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '4'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '4'
+    tape_input: '1'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '5'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '4'
+    tape_input: '2'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '6'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '4'
+    tape_input: '3'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '7'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '4'
+    tape_input: '4'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '8'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '4'
+    tape_input: '5'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '9'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '4'
+    tape_input: '6'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '0'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '4'
+    tape_input: '7'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '1'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '4'
+    tape_input: '8'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '2'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '4'
+    tape_input: '9'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '3'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '5'
+    tape_input: '0'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '5'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '5'
+    tape_input: '1'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '6'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '5'
+    tape_input: '2'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '7'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '5'
+    tape_input: '3'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '8'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '5'
+    tape_input: '4'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '9'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '5'
+    tape_input: '5'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '0'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '5'
+    tape_input: '6'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '1'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '5'
+    tape_input: '7'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '2'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '5'
+    tape_input: '8'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '3'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '5'
+    tape_input: '9'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '4'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '6'
+    tape_input: '0'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '6'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '6'
+    tape_input: '1'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '7'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '6'
+    tape_input: '2'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '8'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '6'
+    tape_input: '3'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '9'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '6'
+    tape_input: '4'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '0'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '6'
+    tape_input: '5'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '1'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '6'
+    tape_input: '6'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '2'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '6'
+    tape_input: '7'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '3'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '6'
+    tape_input: '8'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '4'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '6'
+    tape_input: '9'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '5'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '7'
+    tape_input: '0'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '7'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '7'
+    tape_input: '1'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '8'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '7'
+    tape_input: '2'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '9'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '7'
+    tape_input: '3'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '0'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '7'
+    tape_input: '4'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '1'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '7'
+    tape_input: '5'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '2'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '7'
+    tape_input: '6'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '3'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '7'
+    tape_input: '7'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '4'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '7'
+    tape_input: '8'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '5'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '7'
+    tape_input: '9'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '6'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '8'
+    tape_input: '0'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '8'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '8'
+    tape_input: '1'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '9'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '8'
+    tape_input: '2'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '0'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '8'
+    tape_input: '3'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '1'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '8'
+    tape_input: '4'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '2'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '8'
+    tape_input: '5'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '3'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '8'
+    tape_input: '6'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '4'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '8'
+    tape_input: '7'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '5'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '8'
+    tape_input: '8'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '6'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '8'
+    tape_input: '9'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '7'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '9'
+    tape_input: '0'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '9'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '9'
+    tape_input: '1'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '0'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '9'
+    tape_input: '2'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '1'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '9'
+    tape_input: '3'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '2'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '9'
+    tape_input: '4'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '3'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '9'
+    tape_input: '5'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '4'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '9'
+    tape_input: '6'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '5'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '9'
+    tape_input: '7'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '6'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '9'
+    tape_input: '8'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '7'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '9'
+    tape_input: '9'
+  output:
+    final_state: 'doblar'
+    mem_cache_value: '8'
+    tape_output: '9'
+    tape_displacement: L
+# doblar: suma 2d (2d − 9 si pasa de 9)
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '0'
+    tape_input: '0'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '0'
+    tape_input: '1'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '2'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '0'
+    tape_input: '2'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '4'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '0'
+    tape_input: '3'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '6'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '0'
+    tape_input: '4'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '8'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '0'
+    tape_input: '5'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '1'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '0'
+    tape_input: '6'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '3'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '0'
+    tape_input: '7'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '5'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '0'
+    tape_input: '8'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '7'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '0'
+    tape_input: '9'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '9'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '1'
+    tape_input: '0'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '1'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '1'
+    tape_input: '1'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '3'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '1'
+    tape_input: '2'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '5'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '1'
+    tape_input: '3'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '7'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '1'
+    tape_input: '4'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '9'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '1'
+    tape_input: '5'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '2'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '1'
+    tape_input: '6'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '4'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '1'
+    tape_input: '7'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '6'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '1'
+    tape_input: '8'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '8'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '1'
+    tape_input: '9'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '2'
+    tape_input: '0'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '2'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '2'
+    tape_input: '1'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '4'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '2'
+    tape_input: '2'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '6'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '2'
+    tape_input: '3'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '8'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '2'
+    tape_input: '4'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '2'
+    tape_input: '5'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '3'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '2'
+    tape_input: '6'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '5'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '2'
+    tape_input: '7'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '7'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '2'
+    tape_input: '8'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '9'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '2'
+    tape_input: '9'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '1'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '3'
+    tape_input: '0'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '3'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '3'
+    tape_input: '1'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '5'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '3'
+    tape_input: '2'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '7'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '3'
+    tape_input: '3'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '9'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '3'
+    tape_input: '4'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '1'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '3'
+    tape_input: '5'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '4'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '3'
+    tape_input: '6'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '6'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '3'
+    tape_input: '7'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '8'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '3'
+    tape_input: '8'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '3'
+    tape_input: '9'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '2'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '4'
+    tape_input: '0'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '4'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '4'
+    tape_input: '1'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '6'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '4'
+    tape_input: '2'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '8'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '4'
+    tape_input: '3'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '4'
+    tape_input: '4'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '2'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '4'
+    tape_input: '5'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '5'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '4'
+    tape_input: '6'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '7'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '4'
+    tape_input: '7'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '9'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '4'
+    tape_input: '8'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '1'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '4'
+    tape_input: '9'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '3'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '5'
+    tape_input: '0'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '5'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '5'
+    tape_input: '1'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '7'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '5'
+    tape_input: '2'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '9'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '5'
+    tape_input: '3'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '1'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '5'
+    tape_input: '4'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '3'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '5'
+    tape_input: '5'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '6'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '5'
+    tape_input: '6'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '8'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '5'
+    tape_input: '7'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '5'
+    tape_input: '8'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '2'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '5'
+    tape_input: '9'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '4'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '6'
+    tape_input: '0'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '6'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '6'
+    tape_input: '1'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '8'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '6'
+    tape_input: '2'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '6'
+    tape_input: '3'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '2'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '6'
+    tape_input: '4'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '4'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '6'
+    tape_input: '5'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '7'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '6'
+    tape_input: '6'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '9'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '6'
+    tape_input: '7'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '1'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '6'
+    tape_input: '8'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '3'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '6'
+    tape_input: '9'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '5'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '7'
+    tape_input: '0'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '7'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '7'
+    tape_input: '1'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '9'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '7'
+    tape_input: '2'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '1'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '7'
+    tape_input: '3'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '3'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '7'
+    tape_input: '4'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '5'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '7'
+    tape_input: '5'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '8'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '7'
+    tape_input: '6'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '7'
+    tape_input: '7'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '2'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '7'
+    tape_input: '8'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '4'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '7'
+    tape_input: '9'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '6'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '8'
+    tape_input: '0'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '8'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '8'
+    tape_input: '1'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '8'
+    tape_input: '2'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '2'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '8'
+    tape_input: '3'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '4'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '8'
+    tape_input: '4'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '6'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '8'
+    tape_input: '5'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '9'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '8'
+    tape_input: '6'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '1'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '8'
+    tape_input: '7'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '3'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '8'
+    tape_input: '8'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '5'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '8'
+    tape_input: '9'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '7'
+    tape_output: '9'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '9'
+    tape_input: '0'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '9'
+    tape_output: '0'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '9'
+    tape_input: '1'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '1'
+    tape_output: '1'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '9'
+    tape_input: '2'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '3'
+    tape_output: '2'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '9'
+    tape_input: '3'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '5'
+    tape_output: '3'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '9'
+    tape_input: '4'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '7'
+    tape_output: '4'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '9'
+    tape_input: '5'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '0'
+    tape_output: '5'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '9'
+    tape_input: '6'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '2'
+    tape_output: '6'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '9'
+    tape_input: '7'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '4'
+    tape_output: '7'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '9'
+    tape_input: '8'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '6'
+    tape_output: '8'
+    tape_displacement: L
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '9'
+    tape_input: '9'
+  output:
+    final_state: 'sumar'
+    mem_cache_value: '8'
+    tape_output: '9'
+    tape_displacement: L
+# aceptar si la suma es 0
+- params:
+    initial_state: 'sumar'
+    mem_cache_value: '0'
+    tape_input:
+  output:
+    final_state: 'acepta'
+    mem_cache_value: '0'
+    tape_output:
+    tape_displacement: R
+- params:
+    initial_state: 'doblar'
+    mem_cache_value: '0'
+    tape_input:
+  output:
+    final_state: 'acepta'
+    mem_cache_value: '0'
+    tape_output:
+    tape_displacement: R
+# Dos válidas; la tercera falla Luhn y la cuarta lo cumple pero tiene 11 dígitos.
+simulation_strings:
+- '4111111111111111'
+- '378282246310005'
+- '4111111111111112'
+- '79927398713'
