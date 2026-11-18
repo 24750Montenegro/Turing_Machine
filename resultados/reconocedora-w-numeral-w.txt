@@ -1,0 +1,274 @@
+SIMULACIÓN DE UNA MÁQUINA DE TURING DETERMINISTA
+================================================
+Generado: 17/11/2026, 10:42:41 a. m.
+
+
+1. Especificación
+-----------------
+M = (Q, Σ, Γ, δ, q₀, ⊔, F)
+Q = {q₀, q₁, q₂, q₃, q₄, q₅, q₆}
+Σ = {a, b, #}
+Γ = {a, b, #, X, ⊔}
+F = {q₆}
+caché = sí   (estados [q, m] con q ∈ Q y m ∈ Γ; la caché empieza en ⊔)
+
+δ([q₀, ⊔], a) = ([q₁, a], X, R)
+δ([q₀, ⊔], b) = ([q₁, b], X, R)
+δ([q₀, ⊔], #) = ([q₄, ⊔], #, R)
+δ([q₁, a], a) = ([q₁, a], a, R)
+δ([q₁, a], b) = ([q₁, a], b, R)
+δ([q₁, a], #) = ([q₂, a], #, R)
+δ([q₁, b], a) = ([q₁, b], a, R)
+δ([q₁, b], b) = ([q₁, b], b, R)
+δ([q₁, b], #) = ([q₂, b], #, R)
+δ([q₂, a], X) = ([q₂, a], X, R)
+δ([q₂, a], a) = ([q₃, ⊔], X, L)
+δ([q₂, b], X) = ([q₂, b], X, R)
+δ([q₂, b], b) = ([q₃, ⊔], X, L)
+δ([q₃, ⊔], X) = ([q₃, ⊔], X, L)
+δ([q₃, ⊔], #) = ([q₅, ⊔], #, L)
+δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+δ([q₅, ⊔], X) = ([q₀, ⊔], X, R)
+δ([q₄, ⊔], X) = ([q₄, ⊔], X, R)
+δ([q₄, ⊔], ⊔) = ([q₆, ⊔], ⊔, S)
+
+
+2. Verificación de la especificación
+------------------------------------
+[✓] Q, Σ y Γ son conjuntos finitos no vacíos
+[✓] ⊔ ∉ Σ
+[✓] ⊔ ∈ Γ
+[✓] Σ ⊆ Γ
+[✓] q₀ ∈ Q
+[✓] F ⊆ Q
+[✓] δ: (Q × Γ) × Γ → (Q × Γ) × Γ × {L, R, S}
+[✓] δ es una función: a lo sumo una imagen por cada ([q, m], a)
+[✓] Si δ no está definida, M se detiene
+      Al detenerse acepta si el estado está en F y rechaza si no.
+[✓] Cada cadena usa símbolos de Γ − {⊔}
+[✓] w ∈ Σ*
+
+
+3. Cadenas de entrada
+---------------------
+w₁ = aab#aab        (|w| = 7)
+w₂ = abba#abba      (|w| = 9)
+w₃ = abbababa#aba   (|w| = 12)
+w₄ = abab#abba      (|w| = 9)
+
+
+4. Resumen
+----------
+w₁ = aab#aab        M ACEPTA w    32 pasos      cinta final: XXX#XXX
+w₂ = abba#abba      M ACEPTA w    50 pasos      cinta final: XXXX#XXXX
+w₃ = abbababa#aba   M RECHAZA w   47 pasos      cinta final: XXXababa#XXa
+w₄ = abab#abba      M RECHAZA w   27 pasos      cinta final: XXXb#XXba
+
+
+5. Simulación de w₁ = aab#aab
+-----------------------------
+Configuración inicial: C₁ = [q₀, ⊔]aab#aab
+
+Cᵢ  = configuración     transición aplicada
+C₁  = [q₀, ⊔]aab#aab
+C₂  = X[q₁, a]ab#aab    δ([q₀, ⊔], a) = ([q₁, a], X, R)
+C₃  = Xa[q₁, a]b#aab    δ([q₁, a], a) = ([q₁, a], a, R)
+C₄  = Xab[q₁, a]#aab    δ([q₁, a], b) = ([q₁, a], b, R)
+C₅  = Xab#[q₂, a]aab    δ([q₁, a], #) = ([q₂, a], #, R)
+C₆  = Xab[q₃, ⊔]#Xab    δ([q₂, a], a) = ([q₃, ⊔], X, L)
+C₇  = Xa[q₅, ⊔]b#Xab    δ([q₃, ⊔], #) = ([q₅, ⊔], #, L)
+C₈  = X[q₅, ⊔]ab#Xab    δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₉  = [q₅, ⊔]Xab#Xab    δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+C₁₀ = X[q₀, ⊔]ab#Xab    δ([q₅, ⊔], X) = ([q₀, ⊔], X, R)
+C₁₁ = XX[q₁, a]b#Xab    δ([q₀, ⊔], a) = ([q₁, a], X, R)
+C₁₂ = XXb[q₁, a]#Xab    δ([q₁, a], b) = ([q₁, a], b, R)
+C₁₃ = XXb#[q₂, a]Xab    δ([q₁, a], #) = ([q₂, a], #, R)
+C₁₄ = XXb#X[q₂, a]ab    δ([q₂, a], X) = ([q₂, a], X, R)
+C₁₅ = XXb#[q₃, ⊔]XXb    δ([q₂, a], a) = ([q₃, ⊔], X, L)
+C₁₆ = XXb[q₃, ⊔]#XXb    δ([q₃, ⊔], X) = ([q₃, ⊔], X, L)
+C₁₇ = XX[q₅, ⊔]b#XXb    δ([q₃, ⊔], #) = ([q₅, ⊔], #, L)
+C₁₈ = X[q₅, ⊔]Xb#XXb    δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₁₉ = XX[q₀, ⊔]b#XXb    δ([q₅, ⊔], X) = ([q₀, ⊔], X, R)
+C₂₀ = XXX[q₁, b]#XXb    δ([q₀, ⊔], b) = ([q₁, b], X, R)
+C₂₁ = XXX#[q₂, b]XXb    δ([q₁, b], #) = ([q₂, b], #, R)
+C₂₂ = XXX#X[q₂, b]Xb    δ([q₂, b], X) = ([q₂, b], X, R)
+C₂₃ = XXX#XX[q₂, b]b    δ([q₂, b], X) = ([q₂, b], X, R)
+C₂₄ = XXX#X[q₃, ⊔]XX    δ([q₂, b], b) = ([q₃, ⊔], X, L)
+C₂₅ = XXX#[q₃, ⊔]XXX    δ([q₃, ⊔], X) = ([q₃, ⊔], X, L)
+C₂₆ = XXX[q₃, ⊔]#XXX    δ([q₃, ⊔], X) = ([q₃, ⊔], X, L)
+C₂₇ = XX[q₅, ⊔]X#XXX    δ([q₃, ⊔], #) = ([q₅, ⊔], #, L)
+C₂₈ = XXX[q₀, ⊔]#XXX    δ([q₅, ⊔], X) = ([q₀, ⊔], X, R)
+C₂₉ = XXX#[q₄, ⊔]XXX    δ([q₀, ⊔], #) = ([q₄, ⊔], #, R)
+C₃₀ = XXX#X[q₄, ⊔]XX    δ([q₄, ⊔], X) = ([q₄, ⊔], X, R)
+C₃₁ = XXX#XX[q₄, ⊔]X    δ([q₄, ⊔], X) = ([q₄, ⊔], X, R)
+C₃₂ = XXX#XXX[q₄, ⊔]⊔   δ([q₄, ⊔], X) = ([q₄, ⊔], X, R)
+C₃₃ = XXX#XXX[q₆, ⊔]⊔   δ([q₄, ⊔], ⊔) = ([q₆, ⊔], ⊔, S)
+
+Resultado: M ACEPTA w (32 pasos)
+C₃₃ = XXX#XXX[q₆, ⊔]⊔ es una configuración de aceptación (q₆ ∈ F).
+M acepta w, por lo tanto w ∈ L(M).
+Contenido de la cinta al terminar: XXX#XXX
+
+
+6. Simulación de w₂ = abba#abba
+-------------------------------
+Configuración inicial: C₁ = [q₀, ⊔]abba#abba
+
+Cᵢ  = configuración       transición aplicada
+C₁  = [q₀, ⊔]abba#abba
+C₂  = X[q₁, a]bba#abba    δ([q₀, ⊔], a) = ([q₁, a], X, R)
+C₃  = Xb[q₁, a]ba#abba    δ([q₁, a], b) = ([q₁, a], b, R)
+C₄  = Xbb[q₁, a]a#abba    δ([q₁, a], b) = ([q₁, a], b, R)
+C₅  = Xbba[q₁, a]#abba    δ([q₁, a], a) = ([q₁, a], a, R)
+C₆  = Xbba#[q₂, a]abba    δ([q₁, a], #) = ([q₂, a], #, R)
+C₇  = Xbba[q₃, ⊔]#Xbba    δ([q₂, a], a) = ([q₃, ⊔], X, L)
+C₈  = Xbb[q₅, ⊔]a#Xbba    δ([q₃, ⊔], #) = ([q₅, ⊔], #, L)
+C₉  = Xb[q₅, ⊔]ba#Xbba    δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+C₁₀ = X[q₅, ⊔]bba#Xbba    δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₁₁ = [q₅, ⊔]Xbba#Xbba    δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₁₂ = X[q₀, ⊔]bba#Xbba    δ([q₅, ⊔], X) = ([q₀, ⊔], X, R)
+C₁₃ = XX[q₁, b]ba#Xbba    δ([q₀, ⊔], b) = ([q₁, b], X, R)
+C₁₄ = XXb[q₁, b]a#Xbba    δ([q₁, b], b) = ([q₁, b], b, R)
+C₁₅ = XXba[q₁, b]#Xbba    δ([q₁, b], a) = ([q₁, b], a, R)
+C₁₆ = XXba#[q₂, b]Xbba    δ([q₁, b], #) = ([q₂, b], #, R)
+C₁₇ = XXba#X[q₂, b]bba    δ([q₂, b], X) = ([q₂, b], X, R)
+C₁₈ = XXba#[q₃, ⊔]XXba    δ([q₂, b], b) = ([q₃, ⊔], X, L)
+C₁₉ = XXba[q₃, ⊔]#XXba    δ([q₃, ⊔], X) = ([q₃, ⊔], X, L)
+C₂₀ = XXb[q₅, ⊔]a#XXba    δ([q₃, ⊔], #) = ([q₅, ⊔], #, L)
+C₂₁ = XX[q₅, ⊔]ba#XXba    δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+C₂₂ = X[q₅, ⊔]Xba#XXba    δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₂₃ = XX[q₀, ⊔]ba#XXba    δ([q₅, ⊔], X) = ([q₀, ⊔], X, R)
+C₂₄ = XXX[q₁, b]a#XXba    δ([q₀, ⊔], b) = ([q₁, b], X, R)
+C₂₅ = XXXa[q₁, b]#XXba    δ([q₁, b], a) = ([q₁, b], a, R)
+C₂₆ = XXXa#[q₂, b]XXba    δ([q₁, b], #) = ([q₂, b], #, R)
+C₂₇ = XXXa#X[q₂, b]Xba    δ([q₂, b], X) = ([q₂, b], X, R)
+C₂₈ = XXXa#XX[q₂, b]ba    δ([q₂, b], X) = ([q₂, b], X, R)
+C₂₉ = XXXa#X[q₃, ⊔]XXa    δ([q₂, b], b) = ([q₃, ⊔], X, L)
+C₃₀ = XXXa#[q₃, ⊔]XXXa    δ([q₃, ⊔], X) = ([q₃, ⊔], X, L)
+C₃₁ = XXXa[q₃, ⊔]#XXXa    δ([q₃, ⊔], X) = ([q₃, ⊔], X, L)
+C₃₂ = XXX[q₅, ⊔]a#XXXa    δ([q₃, ⊔], #) = ([q₅, ⊔], #, L)
+C₃₃ = XX[q₅, ⊔]Xa#XXXa    δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+C₃₄ = XXX[q₀, ⊔]a#XXXa    δ([q₅, ⊔], X) = ([q₀, ⊔], X, R)
+C₃₅ = XXXX[q₁, a]#XXXa    δ([q₀, ⊔], a) = ([q₁, a], X, R)
+C₃₆ = XXXX#[q₂, a]XXXa    δ([q₁, a], #) = ([q₂, a], #, R)
+C₃₇ = XXXX#X[q₂, a]XXa    δ([q₂, a], X) = ([q₂, a], X, R)
+C₃₈ = XXXX#XX[q₂, a]Xa    δ([q₂, a], X) = ([q₂, a], X, R)
+C₃₉ = XXXX#XXX[q₂, a]a    δ([q₂, a], X) = ([q₂, a], X, R)
+C₄₀ = XXXX#XX[q₃, ⊔]XX    δ([q₂, a], a) = ([q₃, ⊔], X, L)
+C₄₁ = XXXX#X[q₃, ⊔]XXX    δ([q₃, ⊔], X) = ([q₃, ⊔], X, L)
+C₄₂ = XXXX#[q₃, ⊔]XXXX    δ([q₃, ⊔], X) = ([q₃, ⊔], X, L)
+C₄₃ = XXXX[q₃, ⊔]#XXXX    δ([q₃, ⊔], X) = ([q₃, ⊔], X, L)
+C₄₄ = XXX[q₅, ⊔]X#XXXX    δ([q₃, ⊔], #) = ([q₅, ⊔], #, L)
+C₄₅ = XXXX[q₀, ⊔]#XXXX    δ([q₅, ⊔], X) = ([q₀, ⊔], X, R)
+C₄₆ = XXXX#[q₄, ⊔]XXXX    δ([q₀, ⊔], #) = ([q₄, ⊔], #, R)
+C₄₇ = XXXX#X[q₄, ⊔]XXX    δ([q₄, ⊔], X) = ([q₄, ⊔], X, R)
+C₄₈ = XXXX#XX[q₄, ⊔]XX    δ([q₄, ⊔], X) = ([q₄, ⊔], X, R)
+C₄₉ = XXXX#XXX[q₄, ⊔]X    δ([q₄, ⊔], X) = ([q₄, ⊔], X, R)
+C₅₀ = XXXX#XXXX[q₄, ⊔]⊔   δ([q₄, ⊔], X) = ([q₄, ⊔], X, R)
+C₅₁ = XXXX#XXXX[q₆, ⊔]⊔   δ([q₄, ⊔], ⊔) = ([q₆, ⊔], ⊔, S)
+
+Resultado: M ACEPTA w (50 pasos)
+C₅₁ = XXXX#XXXX[q₆, ⊔]⊔ es una configuración de aceptación (q₆ ∈ F).
+M acepta w, por lo tanto w ∈ L(M).
+Contenido de la cinta al terminar: XXXX#XXXX
+
+
+7. Simulación de w₃ = abbababa#aba
+----------------------------------
+Configuración inicial: C₁ = [q₀, ⊔]abbababa#aba
+
+Cᵢ  = configuración         transición aplicada
+C₁  = [q₀, ⊔]abbababa#aba
+C₂  = X[q₁, a]bbababa#aba   δ([q₀, ⊔], a) = ([q₁, a], X, R)
+C₃  = Xb[q₁, a]bababa#aba   δ([q₁, a], b) = ([q₁, a], b, R)
+C₄  = Xbb[q₁, a]ababa#aba   δ([q₁, a], b) = ([q₁, a], b, R)
+C₅  = Xbba[q₁, a]baba#aba   δ([q₁, a], a) = ([q₁, a], a, R)
+C₆  = Xbbab[q₁, a]aba#aba   δ([q₁, a], b) = ([q₁, a], b, R)
+C₇  = Xbbaba[q₁, a]ba#aba   δ([q₁, a], a) = ([q₁, a], a, R)
+C₈  = Xbbabab[q₁, a]a#aba   δ([q₁, a], b) = ([q₁, a], b, R)
+C₉  = Xbbababa[q₁, a]#aba   δ([q₁, a], a) = ([q₁, a], a, R)
+C₁₀ = Xbbababa#[q₂, a]aba   δ([q₁, a], #) = ([q₂, a], #, R)
+C₁₁ = Xbbababa[q₃, ⊔]#Xba   δ([q₂, a], a) = ([q₃, ⊔], X, L)
+C₁₂ = Xbbabab[q₅, ⊔]a#Xba   δ([q₃, ⊔], #) = ([q₅, ⊔], #, L)
+C₁₃ = Xbbaba[q₅, ⊔]ba#Xba   δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+C₁₄ = Xbbab[q₅, ⊔]aba#Xba   δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₁₅ = Xbba[q₅, ⊔]baba#Xba   δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+C₁₆ = Xbb[q₅, ⊔]ababa#Xba   δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₁₇ = Xb[q₅, ⊔]bababa#Xba   δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+C₁₈ = X[q₅, ⊔]bbababa#Xba   δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₁₉ = [q₅, ⊔]Xbbababa#Xba   δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₂₀ = X[q₀, ⊔]bbababa#Xba   δ([q₅, ⊔], X) = ([q₀, ⊔], X, R)
+C₂₁ = XX[q₁, b]bababa#Xba   δ([q₀, ⊔], b) = ([q₁, b], X, R)
+C₂₂ = XXb[q₁, b]ababa#Xba   δ([q₁, b], b) = ([q₁, b], b, R)
+C₂₃ = XXba[q₁, b]baba#Xba   δ([q₁, b], a) = ([q₁, b], a, R)
+C₂₄ = XXbab[q₁, b]aba#Xba   δ([q₁, b], b) = ([q₁, b], b, R)
+C₂₅ = XXbaba[q₁, b]ba#Xba   δ([q₁, b], a) = ([q₁, b], a, R)
+C₂₆ = XXbabab[q₁, b]a#Xba   δ([q₁, b], b) = ([q₁, b], b, R)
+C₂₇ = XXbababa[q₁, b]#Xba   δ([q₁, b], a) = ([q₁, b], a, R)
+C₂₈ = XXbababa#[q₂, b]Xba   δ([q₁, b], #) = ([q₂, b], #, R)
+C₂₉ = XXbababa#X[q₂, b]ba   δ([q₂, b], X) = ([q₂, b], X, R)
+C₃₀ = XXbababa#[q₃, ⊔]XXa   δ([q₂, b], b) = ([q₃, ⊔], X, L)
+C₃₁ = XXbababa[q₃, ⊔]#XXa   δ([q₃, ⊔], X) = ([q₃, ⊔], X, L)
+C₃₂ = XXbabab[q₅, ⊔]a#XXa   δ([q₃, ⊔], #) = ([q₅, ⊔], #, L)
+C₃₃ = XXbaba[q₅, ⊔]ba#XXa   δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+C₃₄ = XXbab[q₅, ⊔]aba#XXa   δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₃₅ = XXba[q₅, ⊔]baba#XXa   δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+C₃₆ = XXb[q₅, ⊔]ababa#XXa   δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₃₇ = XX[q₅, ⊔]bababa#XXa   δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+C₃₈ = X[q₅, ⊔]Xbababa#XXa   δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₃₉ = XX[q₀, ⊔]bababa#XXa   δ([q₅, ⊔], X) = ([q₀, ⊔], X, R)
+C₄₀ = XXX[q₁, b]ababa#XXa   δ([q₀, ⊔], b) = ([q₁, b], X, R)
+C₄₁ = XXXa[q₁, b]baba#XXa   δ([q₁, b], a) = ([q₁, b], a, R)
+C₄₂ = XXXab[q₁, b]aba#XXa   δ([q₁, b], b) = ([q₁, b], b, R)
+C₄₃ = XXXaba[q₁, b]ba#XXa   δ([q₁, b], a) = ([q₁, b], a, R)
+C₄₄ = XXXabab[q₁, b]a#XXa   δ([q₁, b], b) = ([q₁, b], b, R)
+C₄₅ = XXXababa[q₁, b]#XXa   δ([q₁, b], a) = ([q₁, b], a, R)
+C₄₆ = XXXababa#[q₂, b]XXa   δ([q₁, b], #) = ([q₂, b], #, R)
+C₄₇ = XXXababa#X[q₂, b]Xa   δ([q₂, b], X) = ([q₂, b], X, R)
+C₄₈ = XXXababa#XX[q₂, b]a   δ([q₂, b], X) = ([q₂, b], X, R)
+
+Resultado: M RECHAZA w (47 pasos)
+δ([q₂, b], a) no está definida: M se detiene en C₄₈ = XXXababa#XX[q₂, b]a.
+q₂ ∉ F, así que M rechaza w y w ∉ L(M).
+Contenido de la cinta al terminar: XXXababa#XXa
+
+
+8. Simulación de w₄ = abab#abba
+-------------------------------
+Configuración inicial: C₁ = [q₀, ⊔]abab#abba
+
+Cᵢ  = configuración      transición aplicada
+C₁  = [q₀, ⊔]abab#abba
+C₂  = X[q₁, a]bab#abba   δ([q₀, ⊔], a) = ([q₁, a], X, R)
+C₃  = Xb[q₁, a]ab#abba   δ([q₁, a], b) = ([q₁, a], b, R)
+C₄  = Xba[q₁, a]b#abba   δ([q₁, a], a) = ([q₁, a], a, R)
+C₅  = Xbab[q₁, a]#abba   δ([q₁, a], b) = ([q₁, a], b, R)
+C₆  = Xbab#[q₂, a]abba   δ([q₁, a], #) = ([q₂, a], #, R)
+C₇  = Xbab[q₃, ⊔]#Xbba   δ([q₂, a], a) = ([q₃, ⊔], X, L)
+C₈  = Xba[q₅, ⊔]b#Xbba   δ([q₃, ⊔], #) = ([q₅, ⊔], #, L)
+C₉  = Xb[q₅, ⊔]ab#Xbba   δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₁₀ = X[q₅, ⊔]bab#Xbba   δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+C₁₁ = [q₅, ⊔]Xbab#Xbba   δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₁₂ = X[q₀, ⊔]bab#Xbba   δ([q₅, ⊔], X) = ([q₀, ⊔], X, R)
+C₁₃ = XX[q₁, b]ab#Xbba   δ([q₀, ⊔], b) = ([q₁, b], X, R)
+C₁₄ = XXa[q₁, b]b#Xbba   δ([q₁, b], a) = ([q₁, b], a, R)
+C₁₅ = XXab[q₁, b]#Xbba   δ([q₁, b], b) = ([q₁, b], b, R)
+C₁₆ = XXab#[q₂, b]Xbba   δ([q₁, b], #) = ([q₂, b], #, R)
+C₁₇ = XXab#X[q₂, b]bba   δ([q₂, b], X) = ([q₂, b], X, R)
+C₁₈ = XXab#[q₃, ⊔]XXba   δ([q₂, b], b) = ([q₃, ⊔], X, L)
+C₁₉ = XXab[q₃, ⊔]#XXba   δ([q₃, ⊔], X) = ([q₃, ⊔], X, L)
+C₂₀ = XXa[q₅, ⊔]b#XXba   δ([q₃, ⊔], #) = ([q₅, ⊔], #, L)
+C₂₁ = XX[q₅, ⊔]ab#XXba   δ([q₅, ⊔], b) = ([q₅, ⊔], b, L)
+C₂₂ = X[q₅, ⊔]Xab#XXba   δ([q₅, ⊔], a) = ([q₅, ⊔], a, L)
+C₂₃ = XX[q₀, ⊔]ab#XXba   δ([q₅, ⊔], X) = ([q₀, ⊔], X, R)
+C₂₄ = XXX[q₁, a]b#XXba   δ([q₀, ⊔], a) = ([q₁, a], X, R)
+C₂₅ = XXXb[q₁, a]#XXba   δ([q₁, a], b) = ([q₁, a], b, R)
+C₂₆ = XXXb#[q₂, a]XXba   δ([q₁, a], #) = ([q₂, a], #, R)
+C₂₇ = XXXb#X[q₂, a]Xba   δ([q₂, a], X) = ([q₂, a], X, R)
+C₂₈ = XXXb#XX[q₂, a]ba   δ([q₂, a], X) = ([q₂, a], X, R)
+
+Resultado: M RECHAZA w (27 pasos)
+δ([q₂, a], b) no está definida: M se detiene en C₂₈ = XXXb#XX[q₂, a]ba.
+q₂ ∉ F, así que M rechaza w y w ∉ L(M).
+Contenido de la cinta al terminar: XXXb#XXba
