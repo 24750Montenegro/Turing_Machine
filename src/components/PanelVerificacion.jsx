@@ -2,14 +2,16 @@ import Icono from './Icono.jsx'
 
 const ICONO = { ok: 'ok', error: 'error', advertencia: 'aviso' }
 
-export default function PanelVerificacion({ comprobaciones, valida }) {
+export default function PanelVerificacion({ comprobaciones, valida, modelo }) {
   const aprobadas = comprobaciones.filter((c) => c.estado !== 'error').length
   return (
     <section className="panel verificacion">
       <header className="panel-cabecera">
         <div>
           <h2>Verificación de M</h2>
-          <p className="formula">Definición 1 · máquina de Turing determinista</p>
+          <p className="formula">
+            {modelo === 'hopcroft' ? 'MT determinista de una cinta · (q₀, ⊔, F)' : 'Definición 1 · máquina de Turing determinista'}
+          </p>
         </div>
         <span className={`insignia ${valida ? 'insignia-ok' : 'insignia-error'}`}>
           {aprobadas}/{comprobaciones.length}
