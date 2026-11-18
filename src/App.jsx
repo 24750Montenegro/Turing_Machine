@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { separarEspecificacion } from './services/parser.js'
+import { analizarDefinicion, separarEspecificacion } from './services/parser.js'
 import { verificar } from './services/validador.js'
-import { LIMITE_PREDETERMINADO, simular } from './services/simulador.js'
-import { cintasDe, configuracionATexto, configuracionInicial } from './services/maquina.js'
-import { conSubindice, firmaDelta, transicionATexto } from './services/notacion.js'
+import { LIMITE_PREDETERMINADO, simularCadenas } from './services/simulador.js'
+import { configuracionATexto, configuracionInicial, configuracionesAlineadas } from './services/maquina.js'
+import { MODELOS, conSubindice, firmaDelta, transicionATexto } from './services/notacion.js'
 import { especificacionATexto, maquinaATexto, nombreConfiguracion, reporteATexto } from './services/exportador.js'
+import { cambiarCache } from './services/edicion.js'
+import { esYaml, especificacionAYaml, yamlAEspecificacion } from './services/yaml.js'
 import { descargarTexto, elegirArchivoTexto } from './utils/archivos.js'
 import { useHistorial } from './utils/historial.js'
 import { EJEMPLOS } from './ejemplos.js'
@@ -24,7 +26,13 @@ const ALMACEN_PANEL = 'maquina-turing:entradas-visibles'
 const PANTALLA = { acepta: 'ACEPTA', rechaza: 'RECHAZA', ciclo: 'CICLO ∞', limite: 'SIN PARAR' }
 const PIZARRA = { acepta: 'M acepta w ✓', rechaza: 'M rechaza w ✗', ciclo: 'M no se detiene: ciclo ∞', limite: 'Sin resultado (límite de pasos)' }
 
+const TUPLA = {
+  [MODELOS.sipser]: 'M = (Q, Σ, Γ, δ, q₀, qaccept, qreject)',
+  [MODELOS.hopcroft]: 'M = (Q, Σ, Γ, δ, q₀, ⊔, F) · cinta infinita a ambos lados',
+}
 const PLANTILLA_COMPONENTES = 'M = (Q, Σ, Γ, δ, q1, qaccept, qreject)\nQ = {q1, qaccept, qreject}\nΣ = {0, 1}\nΓ = {0, 1, ⊔}'
+const PLANTILLA_HOPCROFT = 'M = (Q, Σ, Γ, δ, q0, ⊔, F)\nQ = {q0, q1}\nΣ = {a, b}\nΓ = {a, b, ⊔}\nF = {q1}'
+const ACEPTA_ARCHIVO = '.txt,.yaml,.yml,text/plain,application/yaml,text/yaml'
 
 function textosIniciales() {
   const guardado = leer(ALMACEN, null)
@@ -52,11 +60,15 @@ function ritmo(depuracion, velocidad, total) {
   return { ms: Math.min(90, Math.max(16, 2400 / Math.max(total, 1))), salto: total > 150 ? Math.ceil(total / 150) : 1 }
 }
 
+const estadoMostrado = (C) => (C.m === undefined ? C.q : `[${conSubindice(C.q)}, ${C.m}]`)
+
 export default function App() {
   const { valor: textos, cambiar: cambiarTextos, deshacer, rehacer, puedeDeshacer, puedeRehacer } = useHistorial(textosIniciales)
   const verificacion = useMemo(() => verificar(textos), [textos])
+  const definicion = useMemo(() => analizarDefinicion(textos.definicion), [textos.definicion])
   const [ejecucion, setEjecucion] = useState(null)
   const [indice, setIndice] = useState(0)
+  const [cadenaElegida, setCadena] = useState(0)
   const [reproduciendo, setReproduciendo] = useState(false)
   const [depuracion, setDepuracion] = useState(true)
   const [velocidad, setVelocidad] = useState(2)
@@ -69,7 +81,6 @@ export default function App() {
   const [cargaPendiente, setCargaPendiente] = useState(null)
   const [versionDiagrama, setVersionDiagrama] = useState(0)
   const [movimiento, setMovimiento] = useState(null)
-  const [cintaVisible, setCintaVisible] = useState(0)
   const previo = useRef({ id: null, indice: -1 })
 
   useEffect(() => guardar(ALMACEN, textos), [textos])
@@ -77,22 +88,31 @@ export default function App() {
 
   useEffect(() => {
     if (!aviso) return
-    const t = setTimeout(() => setAviso(null), 4200)
+    const t = setTimeout(() => setAviso(null), aviso.error ? 7000 : 4200)
     return () => clearTimeout(t)
   }, [aviso])
 
-  const sim = ejecucion?.simulacion
+  const numeroCadenas = ejecucion ? ejecucion.simulaciones.length : verificacion.cadenas.length
+  const cadena = Math.max(0, Math.min(cadenaElegida, numeroCadenas - 1))
+  const sim = ejecucion?.simulaciones[cadena]
   const total = sim ? sim.pasos.length - 1 : 0
   const desactualizada = Boolean(ejecucion) && ejecucion.textos !== textos
   const { ms, salto } = ritmo(depuracion, velocidad, total)
+  const alineadas = useMemo(() => (sim ? configuracionesAlineadas(sim) : null), [sim])
 
   const ejecutar = useCallback(() => {
     if (!verificacion.valida) return
-    const simulacion = simular(verificacion.maquina, verificacion.w, { limite, detenerEnCiclo })
-    setEjecucion({ id: Date.now(), simulacion, verificacion, textos })
+    const simulaciones = simularCadenas(verificacion.maquina, verificacion.cadenas, { limite, detenerEnCiclo })
+    setEjecucion({ id: Date.now(), simulaciones, verificacion, textos })
     setIndice(0)
     setReproduciendo(!depuracion)
   }, [verificacion, limite, detenerEnCiclo, textos, depuracion])
+
+  const elegirCadena = (i) => {
+    setCadena(i)
+    setIndice(0)
+    setReproduciendo(Boolean(ejecucion) && !depuracion)
+  }
 
   const ir = useCallback(
     (i) => {
@@ -162,12 +182,20 @@ export default function App() {
     setEjecucion(null)
     setReproduciendo(false)
     setIndice(0)
-    if (mensaje) setAviso(mensaje)
+    setCadena(0)
+    if (mensaje) setAviso({ texto: mensaje })
   }
 
   const cargarEspecificacion = async () => {
-    const archivo = await elegirArchivoTexto()
-    if (archivo) setCargaPendiente(archivo)
+    const archivo = await elegirArchivoTexto(ACEPTA_ARCHIVO)
+    if (!archivo) return
+    if (!esYaml(archivo.nombre)) {
+      setCargaPendiente(archivo)
+      return
+    }
+    const { texto, errores } = yamlAEspecificacion(archivo.texto, archivo.nombre)
+    if (errores.length) setAviso({ error: true, texto: `${archivo.nombre}: ${errores.join(' · ')}` })
+    else setCargaPendiente({ nombre: archivo.nombre, texto, origen: 'yaml' })
   }
 
   const importarSeccion = async (seccion) => {
@@ -179,12 +207,23 @@ export default function App() {
       return
     }
     cambiarTextos((t) => ({ ...t, [seccion]: archivo.texto.trimEnd() }))
-    setAviso(`Se importó ${archivo.nombre}`)
+    setAviso({ texto: `Se importó ${archivo.nombre}` })
   }
 
   const exportarResultado = () => {
     if (!ejecucion) return
-    descargarTexto(`configuraciones-${ejecucion.verificacion.maquina.nombre}.txt`, reporteATexto(ejecucion.verificacion, ejecucion.simulacion))
+    descargarTexto(`configuraciones-${ejecucion.verificacion.maquina.nombre}.txt`, reporteATexto(ejecucion.verificacion, ejecucion.simulaciones))
+  }
+
+  const guardarYaml = () => {
+    const { texto, error } = especificacionAYaml(textos)
+    if (error) setAviso({ error: true, texto: error })
+    else descargarTexto('especificacion.yaml', texto, 'application/yaml;charset=utf-8')
+  }
+
+  const alternarCache = (activa) => {
+    const { textos: nuevos } = cambiarCache(textos, activa)
+    cambiarTextos(nuevos)
   }
 
   const actualizar = (seccion) => (valor) => cambiarTextos((t) => ({ ...t, [seccion]: valor }), seccion)
@@ -194,54 +233,63 @@ export default function App() {
   })
 
   const maquinaActual = sim && !desactualizada ? ejecucion.verificacion.maquina : verificacion.maquina
-  const previa = verificacion.valida ? configuracionInicial(verificacion.maquina, verificacion.w) : null
+  const wPrevia = verificacion.cadenas[Math.min(cadena, verificacion.cadenas.length - 1)].w
+  const previa = verificacion.valida ? configuracionInicial(verificacion.maquina, wPrevia) : null
   const pasoActual = sim?.pasos[indice]
   const C = pasoActual?.configuracion ?? previa
+  const vistaCinta = alineadas?.[indice] ?? previa
   const terminado = Boolean(sim) && indice === total
   const situacion = !sim ? 'listo' : terminado ? sim.resultado : 'ejecutando'
 
-  const numeroDeCintas = C ? cintasDe(C).length : 1
   const cuadro = useMemo(() => {
     if (!C) return null
     const M = ejecucion?.verificacion.maquina ?? verificacion.maquina
     const aplicadaEnPizarra = sim && indice > 0 ? sim.pasos[indice].transicion : null
-    const k = Math.min(cintaVisible, cintasDe(C).length - 1)
-    const vista = cintasDe(C)[k]
     return {
-      id: ejecucion?.id ?? 'previa',
+      id: ejecucion ? `${ejecucion.id}-${cadena}` : 'previa',
       indice: sim ? indice : 0,
-      cinta: vista.u + vista.v,
-      cabeza: vista.u.length,
-      estado: C.q,
+      cinta: vistaCinta.u + vistaCinta.v,
+      cabeza: vistaCinta.u.length,
+      estado: estadoMostrado(C),
       situacion,
       pantalla: !sim ? 'LISTO' : terminado ? PANTALLA[sim.resultado] : `PASO ${indice}/${total}`,
-      escritura: sim && indice > 0 ? cintasDe(sim.pasos[indice - 1].configuracion)[k].u.length : null,
+      escritura: sim && indice > 0 ? alineadas[indice - 1].u.length : null,
       duracion: !sim ? 0 : depuracion ? Math.min(1500, ms * 0.9) : ms * 0.95,
       pizarra: {
         maquina: M ? maquinaATexto(M)[0] : '',
-        firma: firmaDelta(M?.cintas),
+        firma: firmaDelta(M ?? undefined),
         configuracion: `${nombreConfiguracion(sim ? indice : 0)} = ${configuracionATexto(C)}`,
         transicion: aplicadaEnPizarra ? transicionATexto(aplicadaEnPizarra, conSubindice) : '',
         resultado: terminado ? PIZARRA[sim.resultado] : '',
       },
     }
-  }, [C, ejecucion, sim, indice, situacion, terminado, total, depuracion, ms, verificacion.maquina, cintaVisible])
+  }, [C, vistaCinta, alineadas, ejecucion, cadena, sim, indice, situacion, terminado, total, depuracion, ms, verificacion.maquina])
 
   const enSimulacion = Boolean(sim) && !desactualizada
   const aplicada = enSimulacion && indice > 0 ? pasoActual.transicion : null
-  const anterior = enSimulacion && indice > 0 ? sim.pasos[indice - 1].configuracion : null
-  const paso = enSimulacion ? { indice, C, anterior, transicion: aplicada } : null
+  const paso = enSimulacion
+    ? { indice, C, transicion: aplicada, vista: alineadas[indice], vistaAnterior: indice > 0 ? alineadas[indice - 1] : null }
+    : null
 
   useEffect(() => {
     const p = previo.current
-    previo.current = { id: ejecucion?.id, indice }
-    const consecutivo = Boolean(sim) && p.id === ejecucion.id && p.indice === indice - 1
+    const id = ejecucion ? `${ejecucion.id}-${cadena}` : null
+    previo.current = { id, indice }
+    const consecutivo = Boolean(sim) && p.id === id && p.indice === indice - 1
     setMovimiento(
       consecutivo && cuadro?.duracion > 0
-        ? { desde: sim.pasos[indice].transicion.q, hacia: sim.pasos[indice].transicion.qj, duracion: cuadro.duracion, clave: `${ejecucion.id}-${indice}`, t0: performance.now() }
+        ? { desde: sim.pasos[indice].transicion.q, hacia: sim.pasos[indice].transicion.qj, duracion: cuadro.duracion, clave: `${id}-${indice}`, t0: performance.now() }
         : null,
     )
-  }, [ejecucion?.id, indice])
+  }, [ejecucion?.id, cadena, indice])
+
+  const hopcroft = definicion.modelo === MODELOS.hopcroft
+  const interruptorCache = (
+    <label className={`interruptor ${definicion.cache ? 'activo' : ''}`} title="Estados [q, m]: la máquina guarda un símbolo de Γ en su control finito">
+      <input type="checkbox" checked={definicion.cache} onChange={(e) => alternarCache(e.target.checked)} />
+      Caché [q, m]
+    </label>
+  )
 
   return (
     <div className="app">
@@ -249,6 +297,8 @@ export default function App() {
         onCargar={cargarEspecificacion}
         onEjemplo={(e) => reemplazarTodo(e.texto, `Ejemplo cargado: ${e.titulo}`)}
         onGuardar={() => descargarTexto('especificacion.txt', especificacionATexto(textos))}
+        onGuardarYaml={guardarYaml}
+        puedeYaml={hopcroft}
       />
 
       <main className={`principal ${entradasVisibles ? '' : 'sin-entradas'}`}>
@@ -256,48 +306,52 @@ export default function App() {
           <div className="columna columna-entradas" id="panel-configuracion" hidden={!entradasVisibles}>
             <EditorSeccion
               titulo="Gramática · componentes"
-              formula="M = (Q, Σ, Γ, δ, q₀, qaccept, qreject)"
+              formula={TUPLA[definicion.modelo]}
               valor={textos.definicion}
               onCambio={actualizar('definicion')}
               onImportar={() => importarSeccion('definicion')}
               {...mensajes('definicion')}
               filas={7}
               placeholder={PLANTILLA_COMPONENTES}
+              extra={interruptorCache}
               atajos={[
                 { etiqueta: 'Σ', texto: 'Σ' },
                 { etiqueta: 'Γ', texto: 'Γ' },
                 { etiqueta: 'δ', texto: 'δ' },
                 { etiqueta: '⊔', texto: '⊔' },
-                { etiqueta: 'plantilla', titulo: 'Reemplazar por una plantilla', accion: () => actualizar('definicion')(PLANTILLA_COMPONENTES) },
+                { etiqueta: 'plantilla', titulo: 'Reemplazar por la plantilla (q₀, qaccept, qreject)', accion: () => actualizar('definicion')(PLANTILLA_COMPONENTES) },
+                { etiqueta: 'plantilla F', titulo: 'Reemplazar por la plantilla (q₀, ⊔, F) del formato YAML', accion: () => actualizar('definicion')(PLANTILLA_HOPCROFT) },
               ]}
             />
             <EditorSeccion
               titulo="Transiciones"
-              formula={firmaDelta(verificacion.maquina?.cintas)}
+              formula={firmaDelta(definicion)}
               valor={textos.transiciones}
               onCambio={actualizar('transiciones')}
               onImportar={() => importarSeccion('transiciones')}
               {...mensajes('transiciones')}
               filas={11}
-              placeholder={'δ(q1, 0) = (q1, 0, R)\nδ(q1, ⊔) = (qaccept, ⊔, R)'}
+              placeholder={definicion.cache ? 'δ([q0, ⊔], a) = ([q1, a], ⊔, R)\nδ([q1, a], ⊔) = ([q2, ⊔], a, S)' : 'δ(q1, 0) = (q1, 0, R)\nδ(q1, ⊔) = (qaccept, ⊔, R)'}
               atajos={[
                 { etiqueta: 'δ', texto: 'δ' },
                 { etiqueta: '⊔', texto: '⊔' },
-                { etiqueta: '+ δ(q, a) = (q, b, R)', texto: 'δ(q1, 0) = (q1, 0, R)\n', titulo: 'Insertar una transición' },
+                definicion.cache
+                  ? { etiqueta: '+ δ([q, m], a) = ([p, n], b, R)', texto: 'δ([q1, ⊔], 0) = ([q1, 0], 0, R)\n', titulo: 'Insertar una transición con caché' }
+                  : { etiqueta: '+ δ(q, a) = (q, b, R)', texto: 'δ(q1, 0) = (q1, 0, R)\n', titulo: 'Insertar una transición' },
               ]}
             />
             <EditorSeccion
               titulo="Entrada"
-              formula="w ∈ Σ*"
+              formula="una cadena por línea · w ∈ Σ*"
               valor={textos.entrada}
               onCambio={actualizar('entrada')}
               onImportar={() => importarSeccion('entrada')}
               {...mensajes('entrada')}
-              filas={2}
-              placeholder="w = 0011"
-              atajos={[{ etiqueta: 'ε', titulo: 'Cadena vacía', accion: () => actualizar('entrada')('w = ε') }]}
+              filas={3}
+              placeholder={'w = 0011\nw = 0101'}
+              atajos={[{ etiqueta: 'ε', titulo: 'Agregar la cadena vacía', accion: () => actualizar('entrada')(textos.entrada.trim() ? `${textos.entrada.trimEnd()}\nw = ε` : 'w = ε') }]}
             />
-            <PanelVerificacion comprobaciones={verificacion.comprobaciones} valida={verificacion.valida} />
+            <PanelVerificacion comprobaciones={verificacion.comprobaciones} valida={verificacion.valida} modelo={definicion.modelo} />
           </div>
           <button
             className="riel"
@@ -333,14 +387,7 @@ export default function App() {
 
             <div className="escenario-cuerpo">
               <div className={`capa ${pestana === 'maquina' ? 'visible' : ''}`}>
-                <VisorMaquina
-                  cuadro={cuadro}
-                  vista={vista}
-                  onVista={setVista}
-                  cintas={numeroDeCintas}
-                  cinta={Math.min(cintaVisible, numeroDeCintas - 1)}
-                  onCinta={setCintaVisible}
-                />
+                <VisorMaquina cuadro={cuadro} vista={vista} onVista={setVista} />
               </div>
               {pestana === 'diagrama' && (
                 <div className="capa visible">
@@ -398,6 +445,9 @@ export default function App() {
         <div className="columna columna-depurador">
           <Depurador
             ejecucion={ejecucion}
+            cadenas={verificacion.cadenas}
+            cadena={cadena}
+            onCadena={elegirCadena}
             indice={indice}
             onIr={ir}
             depuracion={depuracion}
@@ -412,6 +462,7 @@ export default function App() {
         <VistaPreviaCarga
           nombre={cargaPendiente.nombre}
           texto={cargaPendiente.texto}
+          origen={cargaPendiente.origen}
           onCancelar={() => setCargaPendiente(null)}
           onConfirmar={() => {
             reemplazarTodo(cargaPendiente.texto, `Se cargó ${cargaPendiente.nombre}`)
@@ -421,8 +472,8 @@ export default function App() {
       )}
 
       {aviso && (
-        <div className="aviso-flotante" role="status">
-          <Icono nombre="ok" tamano={16} /> {aviso}
+        <div className={`aviso-flotante ${aviso.error ? 'aviso-error' : ''}`} role={aviso.error ? 'alert' : 'status'}>
+          <Icono nombre={aviso.error ? 'error' : 'ok'} tamano={16} /> {aviso.texto}
         </div>
       )}
     </div>
