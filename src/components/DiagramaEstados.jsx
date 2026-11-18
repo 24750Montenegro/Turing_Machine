@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { aristasDiagrama } from '../services/diagrama.js'
-import { cintasDe } from '../services/maquina.js'
 import { agregarEstado, siguienteEstado } from '../services/edicion.js'
 import { distribuir } from '../diagrama/distribucion.js'
 import { diagramaSVG, limitesDiagrama } from '../diagrama/svg.js'
@@ -11,6 +10,7 @@ import InspectorDiagrama from './InspectorDiagrama.jsx'
 import Icono from './Icono.jsx'
 
 const UMBRAL_ARRASTRE = 4
+const DIRECCION = { L: '← la cabeza va a la izquierda', R: 'la cabeza va a la derecha →', S: 'la cabeza no se mueve' }
 
 export default function DiagramaEstados({
   maquina,
@@ -176,10 +176,10 @@ export default function DiagramaEstados({
             </button>
           </>
         )}
-        <label className="casilla">
+        {maquina.qreject && <label className="casilla">
           <input type="checkbox" checked={ocultarRechazo} onChange={(e) => setOcultarRechazo(e.target.checked)} />
           <span>Ocultar transiciones hacia qreject</span>
-        </label>
+        </label>}
         {maquina.implicitas.length > 0 && (
           <label className="casilla">
             <input type="checkbox" checked={implicitas} onChange={(e) => setImplicitas(e.target.checked)} />
@@ -231,25 +231,21 @@ export default function DiagramaEstados({
             {paso.transicion ? (
               <span>
                 <Transicion t={paso.transicion} />
-                {!paso.C.cintas && (
-                  <span className={`direccion direccion-${paso.transicion.mov}`}>
-                    {paso.transicion.mov === 'L' ? '← la cabeza va a la izquierda' : 'la cabeza va a la derecha →'}
-                  </span>
-                )}
+                <span className={`direccion direccion-${paso.transicion.mov}`}>{DIRECCION[paso.transicion.mov]}</span>
               </span>
             ) : (
               <span className="nota">Configuración inicial</span>
             )}
           </p>
-          {cintasDe(paso.C).map((cinta, i) => {
-            const previa = paso.anterior ? cintasDe(paso.anterior)[i] : null
-            return <CintaPlana key={i} C={cinta} anterior={previa} escrita={previa ? previa.u.length : null} celdasVisibles={18} />
-          })}
+          <CintaPlana C={paso.vista} anterior={paso.vistaAnterior} escrita={paso.vistaAnterior ? paso.vistaAnterior.u.length : null} celdasVisibles={18} />
         </div>
       ) : (
         <p className="diagrama-nota">
-          {ocultarRechazo || maquina.implicitas.length > 0 ? 'Las transiciones que no se dibujan van a qreject. ' : ''}
-          Notación de clase: «a → b, D» lee a, escribe b y mueve D; «a → D» deja el símbolo igual. Arrastra los estados para acomodarlos.
+          {maquina.qreject
+            ? ocultarRechazo || maquina.implicitas.length > 0 ? 'Las transiciones que no se dibujan van a qreject. ' : ''
+            : 'Si no hay transición, M se detiene: acepta en los estados de F (doble círculo) y rechaza en los demás. '}
+          Notación de clase: «a → b, D» lee a, escribe b y mueve D; «a → D» deja el símbolo igual.
+          {maquina.cache ? ' Con caché, «[m] a → [n] b, D» lee a con m en la caché y guarda n.' : ''} Arrastra los estados para acomodarlos.
         </p>
       )}
     </div>
