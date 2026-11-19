@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   asignarRol,
   eliminarEstado,
@@ -6,34 +6,30 @@ import {
   guardarTransicion,
   renombrarEstado,
 } from '../services/edicion.js'
-import { MOVIMIENTOS, MOVIMIENTOS_CINTAS, conSubindice, normalizarEstado, piezas } from '../services/notacion.js'
+import { esHopcroft, esParada } from '../services/maquina.js'
+import { BLANCO, conSubindice, movimientosDe, normalizarEstado } from '../services/notacion.js'
 import { Estado, Transicion } from './Notacion.jsx'
 import Icono from './Icono.jsx'
 
-const ROLES = [
+const ROLES_SIPSER = [
   { campo: 'q0', etiqueta: 'Inicial' },
   { campo: 'qaccept', etiqueta: 'Aceptación' },
   { campo: 'qreject', etiqueta: 'Rechazo' },
 ]
 const OTRO = '\u0000otro'
 
-// Primera lectura (a₁, …, aₖ) que todavía no tiene transición desde q.
-function lecturaLibre(Gamma, k, usados) {
-  const total = Math.min(Gamma.length ** k, 2000)
-  for (let n = 0; n < total; n++) {
-    const leidos = Array.from({ length: k }, (_, i) => Gamma[Math.floor(n / Gamma.length ** (k - 1 - i)) % Gamma.length])
-    if (!usados.has(leidos.join(''))) return leidos
-  }
-  return Array(k).fill(Gamma[0])
+function lecturaLibre(M, q) {
+  const usadas = new Set(M.transiciones.filter((t) => t.q === q).map((t) => `${t.m ?? ''}\u0000${t.a}`))
+  const caches = M.cache ? [BLANCO, ...M.Gamma.filter((s) => s !== BLANCO)] : [undefined]
+  for (const m of caches) for (const a of M.Gamma) if (!usadas.has(`${m ?? ''}\u0000${a}`)) return { m, a }
+  return { m: caches[0], a: M.Gamma[0] }
 }
 
 function valoresIniciales(M, desde, hacia) {
-  const origenes = M.Q.filter((q) => q !== M.qaccept && q !== M.qreject)
+  const origenes = M.Q.filter((q) => !esParada(M, q))
   const q = origenes.includes(desde) ? desde : origenes[0]
-  const usados = new Set(M.transiciones.filter((t) => t.q === q).map((t) => t.a))
-  const k = M.cintas ?? 1
-  const leidos = lecturaLibre(M.Gamma, k, usados)
-  return { q, qj: hacia ?? q, leidos, escritos: [...leidos], movs: Array(k).fill('R') }
+  const { m, a } = lecturaLibre(M, q)
+  return { q, qj: hacia ?? q, a, c: a, mov: 'R', ...(M.cache ? { m, n: m } : {}) }
 }
 
 function SelectorSimbolo({ valor, Gamma, onCambio, etiqueta }) {
@@ -60,19 +56,23 @@ function SelectorSimbolo({ valor, Gamma, onCambio, etiqueta }) {
   )
 }
 
+function SelectorEstado({ valor, estados, onCambio, etiqueta }) {
+  return (
+    <select value={valor} onChange={(e) => onCambio(e.target.value)} aria-label={etiqueta}>
+      {estados.map((q) => (
+        <option key={q} value={q}>{conSubindice(q)}</option>
+      ))}
+    </select>
+  )
+}
+
 function FormularioTransicion({ M, inicial, editando, onGuardar, onCancelar }) {
   const [t, setT] = useState(inicial)
   useEffect(() => setT(inicial), [inicial])
-  const cambiar = (campo) => (valor) => setT((x) => ({ ...x, [campo]: valor }))
-  const cambiarEn = (campo, i) => (valor) =>
-    setT((x) => {
-      const poner = (lista) => lista.map((v, j) => (j === i ? valor : v))
-      const sigue = campo === 'leidos' && x.escritos[i] === x.leidos[i]
-      return { ...x, [campo]: poner(x[campo]), ...(sigue ? { escritos: poner(x.escritos) } : {}) }
-    })
-  const origenes = M.Q.filter((q) => q !== M.qaccept && q !== M.qreject)
-  const varias = t.leidos.length > 1
-  const enCinta = (texto, i) => (varias ? `${texto} en la cinta ${i + 1}` : texto)
+  const cambiar = (campo) => (valor) =>
+    setT((x) => ({ ...x, [campo]: valor, ...(campo === 'a' && x.c === x.a ? { c: valor } : {}) }))
+  const origenes = M.Q.filter((q) => !esParada(M, q))
+  const simbolo = (campo, etiqueta) => <SelectorSimbolo valor={t[campo]} Gamma={M.Gamma} onCambio={cambiar(campo)} etiqueta={etiqueta} />
 
   return (
     <form
@@ -84,42 +84,36 @@ function FormularioTransicion({ M, inicial, editando, onGuardar, onCancelar }) {
     >
       <p className="tarjeta-titulo">{editando ? 'Editar transición' : 'Nueva transición'}</p>
       <div className="delta-campos">
-        <span>δ(</span>
-        <select value={t.q} onChange={(e) => cambiar('q')(e.target.value)} aria-label="Estado de origen">
-          {origenes.map((q) => (
-            <option key={q} value={q}>{conSubindice(q)}</option>
+        <span>δ({M.cache && '['}</span>
+        <SelectorEstado valor={t.q} estados={origenes} onCambio={cambiar('q')} etiqueta="Estado de origen" />
+        {M.cache && (
+          <>
+            <span>,</span>
+            {simbolo('m', 'Caché leída')}
+            <span>]</span>
+          </>
+        )}
+        <span>,</span>
+        {simbolo('a', 'Símbolo leído')}
+        <span>) = ({M.cache && '['}</span>
+        <SelectorEstado valor={t.qj} estados={M.Q} onCambio={cambiar('qj')} etiqueta="Estado destino" />
+        {M.cache && (
+          <>
+            <span>,</span>
+            {simbolo('n', 'Caché guardada')}
+            <span>]</span>
+          </>
+        )}
+        <span>,</span>
+        {simbolo('c', 'Símbolo escrito')}
+        <span>,</span>
+        <span className="mini-segmentos" role="group" aria-label="Movimiento">
+          {movimientosDe(M.modelo).map((d) => (
+            <button type="button" key={d} className={t.mov === d ? 'activo' : ''} onClick={() => cambiar('mov')(d)}>
+              {d}
+            </button>
           ))}
-        </select>
-        {t.leidos.map((a, i) => (
-          <Fragment key={`l${i}`}>
-            <span>,</span>
-            <SelectorSimbolo valor={a} Gamma={M.Gamma} onCambio={cambiarEn('leidos', i)} etiqueta={enCinta('Símbolo leído', i)} />
-          </Fragment>
-        ))}
-        <span>) = (</span>
-        <select value={t.qj} onChange={(e) => cambiar('qj')(e.target.value)} aria-label="Estado destino">
-          {M.Q.map((q) => (
-            <option key={q} value={q}>{conSubindice(q)}</option>
-          ))}
-        </select>
-        {t.escritos.map((c, i) => (
-          <Fragment key={`e${i}`}>
-            <span>,</span>
-            <SelectorSimbolo valor={c} Gamma={M.Gamma} onCambio={cambiarEn('escritos', i)} etiqueta={enCinta('Símbolo escrito', i)} />
-          </Fragment>
-        ))}
-        {t.movs.map((d, i) => (
-          <Fragment key={`m${i}`}>
-            <span>,</span>
-            <span className="mini-segmentos" role="group" aria-label={enCinta('Movimiento', i)}>
-              {(varias ? MOVIMIENTOS_CINTAS : MOVIMIENTOS).map((m) => (
-                <button type="button" key={m} className={d === m ? 'activo' : ''} onClick={() => cambiarEn('movs', i)(m)}>
-                  {m}
-                </button>
-              ))}
-            </span>
-          </Fragment>
-        ))}
+        </span>
         <span>)</span>
       </div>
       <div className="formulario-acciones">
@@ -185,7 +179,7 @@ export default function InspectorDiagrama({ maquina: M, textos, seleccion, onApl
 
   const editar = (t) => {
     setEdicion(t.linea)
-    setInicial({ q: t.q, qj: t.qj, ...piezas(t) })
+    setInicial({ q: t.q, qj: t.qj, a: t.a, c: t.c, mov: t.mov, ...(M.cache ? { m: t.m ?? BLANCO, n: t.n ?? BLANCO } : {}) })
   }
   const eliminar = (t) => aplicar(eliminarTransicion(textos, t.linea), () => edicion === t.linea && setEdicion(null))
   const guardar = (t) =>
@@ -194,7 +188,14 @@ export default function InspectorDiagrama({ maquina: M, textos, seleccion, onApl
       setInicial(valoresIniciales(M, desde, hacia))
     })
 
-  const esParada = (q) => q === M.qaccept || q === M.qreject
+  const hopcroft = esHopcroft(M)
+  const roles = hopcroft
+    ? [
+        { campo: 'q0', etiqueta: 'Inicial', activo: (q) => M.q0 === q },
+        { campo: 'final', etiqueta: 'Final (∈ F)', activo: (q) => M.F.includes(q), alterna: true },
+      ]
+    : ROLES_SIPSER.map((r) => ({ ...r, activo: (q) => M[r.campo] === q }))
+  const protegido = (q) => (hopcroft ? M.q0 === q : ROLES_SIPSER.some(({ campo }) => M[campo] === q))
   const formulario = (
     <FormularioTransicion
       M={M}
@@ -247,12 +248,12 @@ export default function InspectorDiagrama({ maquina: M, textos, seleccion, onApl
           <div>
             <p className="tarjeta-titulo">Papel en M</p>
             <div className="mini-segmentos roles" role="group" aria-label="Papel del estado">
-              {ROLES.map(({ campo, etiqueta }) => (
+              {roles.map(({ campo, etiqueta, activo, alterna }) => (
                 <button
                   key={campo}
-                  className={M[campo] === seleccion.q ? 'activo' : ''}
-                  aria-pressed={M[campo] === seleccion.q}
-                  onClick={() => M[campo] !== seleccion.q && aplicar(asignarRol(textos, campo, seleccion.q))}
+                  className={activo(seleccion.q) ? 'activo' : ''}
+                  aria-pressed={activo(seleccion.q)}
+                  onClick={() => (alterna || !activo(seleccion.q)) && aplicar(asignarRol(textos, campo, seleccion.q))}
                 >
                   {etiqueta}
                 </button>
@@ -263,7 +264,7 @@ export default function InspectorDiagrama({ maquina: M, textos, seleccion, onApl
           <ListaTransiciones
             titulo="Transiciones que salen"
             transiciones={M.transiciones.filter((t) => t.q === seleccion.q)}
-            vacio={esParada(seleccion.q) ? 'Los estados de parada no producen más configuraciones.' : 'Ninguna todavía.'}
+            vacio={esParada(M, seleccion.q) ? 'Los estados de parada no producen más configuraciones.' : 'Ninguna todavía.'}
             onEditar={editar}
             onEliminar={eliminar}
           />
@@ -292,8 +293,8 @@ export default function InspectorDiagrama({ maquina: M, textos, seleccion, onApl
       {seleccion.tipo === 'estado' && (
         <button
           className="boton boton-chico peligro eliminar-estado"
-          disabled={ROLES.some(({ campo }) => M[campo] === seleccion.q)}
-          title={ROLES.some(({ campo }) => M[campo] === seleccion.q) ? 'Asigna su papel a otro estado antes de eliminarlo' : 'Eliminar el estado y sus transiciones'}
+          disabled={protegido(seleccion.q)}
+          title={protegido(seleccion.q) ? 'Asigna su papel a otro estado antes de eliminarlo' : 'Eliminar el estado y sus transiciones'}
           onClick={() => aplicar(eliminarEstado(textos, seleccion.q), () => onSeleccionar(null))}
         >
           <Icono nombre="error" tamano={15} /> Eliminar estado

@@ -8,6 +8,7 @@ const ESTILO = `
 .mt-fondo { fill: #fbf7ef; }
 .mt-nodo circle { fill: #fffdf8; stroke: #1b1b1f; stroke-width: 2.5; }
 .mt-nodo.aceptacion circle { fill: #d4f3df; }
+.mt-nodo circle.doble { fill: none; stroke-width: 1.6; }
 .mt-nodo.rechazo circle { fill: #fddcd8; }
 .mt-nodo.activo circle { fill: #ffd23f; stroke-width: 3.5; }
 .mt-nodo text { font: italic 19px 'Cambria Math', 'Latin Modern Math', 'Times New Roman', serif; fill: #1b1b1f; }
@@ -101,6 +102,19 @@ function geometria(arista, posiciones, radios, curvada) {
   return { d: `M ${n(s.x)} ${n(s.y)} Q ${n(c.x)} ${n(c.y)} ${n(e.x)} ${n(e.y)}`, candidatos }
 }
 
+const MAX_LINEAS = 6
+
+function resumir(etiquetas, destacada) {
+  if (etiquetas.length <= MAX_LINEAS) return { lineas: etiquetas, destacada }
+  const visibles = etiquetas.slice(0, MAX_LINEAS - 1)
+  let linea = destacada
+  if (destacada >= visibles.length) {
+    visibles[visibles.length - 1] = etiquetas[destacada]
+    linea = visibles.length - 1
+  }
+  return { lineas: [...visibles, `… y ${etiquetas.length - visibles.length} más`], destacada: linea }
+}
+
 function bloqueEtiqueta(lineas, { punto, normal }, destacada = -1) {
   const ancho = Math.max(...lineas.map((l) => [...l].length)) * ANCHO_CARACTER
   const alto = lineas.length * ALTO_LINEA
@@ -160,15 +174,15 @@ export function diagramaSVG(
     const clase = ['mt-arista', a.hacia === M.qreject && 'hacia-rechazo', a.implicita && 'implicita', activa && 'activa', seleccionada && 'seleccionada']
       .filter(Boolean).join(' ')
     const marcador = activa ? 'mt-flecha-activa' : a.hacia === M.qreject ? 'mt-flecha-tenue' : 'mt-flecha'
-    const destacada = activa ? a.simbolos.findIndex((s) => s.includes(transicionActiva.a)) : -1
+    const destacada = activa ? a.lecturas.findIndex((l) => l.includes(`${transicionActiva.m ?? ''}\u0000${transicionActiva.a}`)) : -1
     const datos = `data-desde="${escapar(a.desde)}" data-hacia="${escapar(a.hacia)}"`
-    return { arista: a, ...g, activa, clase, marcador, destacada, datos }
+    return { arista: a, ...g, activa, clase, marcador, datos, ...resumir(a.etiquetas, destacada) }
   })
 
   const ocupadas = trazos.filter((t) => t.lazo).map((t) => t.lazo)
-  const orden = [...trazos].sort((a, b) => Boolean(b.lazo) - Boolean(a.lazo) || a.arista.etiquetas.length - b.arista.etiquetas.length)
+  const orden = [...trazos].sort((a, b) => Boolean(b.lazo) - Boolean(a.lazo) || a.lineas.length - b.lineas.length)
   for (const t of orden) {
-    const opciones = t.candidatos.map((c) => bloqueEtiqueta(t.arista.etiquetas, c, t.destacada))
+    const opciones = t.candidatos.map((c) => bloqueEtiqueta(t.lineas, c, t.destacada))
     const libre = opciones.find((o) => !circulos.some((c) => cruzaCirculo(o.caja, c)) && !ocupadas.some((x) => x !== t.lazo && cruzaRectangulos(o.caja, x)))
     t.etiqueta = libre ?? opciones[0]
     ocupadas.push(t.etiqueta.caja)
@@ -178,10 +192,10 @@ export function diagramaSVG(
   const nodos = M.Q.map((q) => {
     const p = posiciones[q]
     const seleccionado = seleccion?.tipo === 'estado' && seleccion.q === q
-    const clase = ['mt-nodo', q === M.qaccept && 'aceptacion', q === M.qreject && 'rechazo', q === activo && 'activo', seleccionado && 'seleccionado']
+    const clase = ['mt-nodo', M.F.includes(q) && 'aceptacion', q === M.qreject && 'rechazo', q === activo && 'activo', seleccionado && 'seleccionado']
       .filter(Boolean).join(' ')
     const halo = seleccionado ? `<circle class="halo" r="${n(radios[q] + 8)}"/>` : ''
-    return `<g class="${clase}" data-estado="${escapar(q)}" transform="translate(${n(p.x)} ${n(p.y)})">${halo}<circle r="${n(radios[q])}"/>${etiquetaEstado(q)}</g>`
+    return `<g class="${clase}" data-estado="${escapar(q)}" transform="translate(${n(p.x)} ${n(p.y)})">${halo}<circle r="${n(radios[q])}"/>${M.F.includes(q) ? `<circle class="doble" r="${n(radios[q] - 5)}"/>` : ''}${etiquetaEstado(q)}</g>`
   })
 
   const recorrido = movimiento && trazos.find((t) => es(t.arista, movimiento.desde, movimiento.hacia))

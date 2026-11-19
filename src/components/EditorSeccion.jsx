@@ -20,6 +20,7 @@ export default function EditorSeccion({
   atajos = [],
   filas = 8,
   placeholder,
+  extra = null,
 }) {
   const area = useRef(null)
   const canal = useRef(null)
@@ -65,9 +66,12 @@ export default function EditorSeccion({
           <h2>{titulo}</h2>
           <p className="formula">{formula}</p>
         </div>
-        <button className="boton boton-chico" onClick={onImportar} title="Importar desde un archivo .txt">
-          <Icono nombre="subir" tamano={16} /> .txt
-        </button>
+        <div className="acciones-editor">
+          {extra}
+          <button className="boton boton-chico" onClick={onImportar} title="Importar desde un archivo .txt">
+            <Icono nombre="subir" tamano={16} /> .txt
+          </button>
+        </div>
       </header>
 
       <div className="codigo" style={{ '--filas': filas }}>

@@ -4,7 +4,7 @@ import Icono from './Icono.jsx'
 
 const NOMBRES = { definicion: 'Componentes', transiciones: 'Transiciones', entrada: 'Entrada' }
 
-export default function VistaPreviaCarga({ nombre, texto, onConfirmar, onCancelar }) {
+export default function VistaPreviaCarga({ nombre, texto, origen, onConfirmar, onCancelar }) {
   const lineas = useMemo(() => clasificarLineas(texto), [texto])
   const usaEncabezados = lineas.some((l) => l.tipo === 'encabezado')
   const confirmar = useRef(null)
@@ -31,6 +31,13 @@ export default function VistaPreviaCarga({ nombre, texto, onConfirmar, onCancela
           </button>
         </header>
 
+        {origen === 'yaml' && (
+          <p className="modal-explicacion">
+            El archivo YAML se convirtió a la notación del simulador: <code>q_states</code> da Q, q₀ y F; <code>alphabet</code> da Σ;
+            Γ = Σ ∪ <code>tape_alphabet</code> ∪ {'{⊔}'}; cada elemento de <code>delta</code> es una transición (con caché,{' '}
+            δ([q, m], a) = ([p, n], b, D)) y cada elemento de <code>simulation_strings</code> es una cadena de entrada.
+          </p>
+        )}
         <p className="modal-explicacion">
           {usaEncabezados ? (
             <>

@@ -3,8 +3,9 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { separarEspecificacion } from '../src/services/parser.js'
 import { verificar } from '../src/services/validador.js'
-import { simular } from '../src/services/simulador.js'
+import { simular, simularCadenas } from '../src/services/simulador.js'
 import { reporteATexto } from '../src/services/exportador.js'
+import { yamlAEspecificacion } from '../src/services/yaml.js'
 
 const ruta = (archivo) => fileURLToPath(new URL(`../${archivo}`, import.meta.url))
 const sinFecha = (texto) => texto.replace(/^Generado: .*$/m, '')
@@ -100,19 +101,58 @@ test('Editar el diagrama escribe en la especificación y se puede deshacer', asy
   await expect(componentes).toHaveValue(/Q = \{q1, q2, q3, q4, q5, q6, qaccept, qreject\}/)
 })
 
-test('Simula una máquina de dos cintas', async ({ page }) => {
+test('Carga un .yaml con caché, simula todas las cadenas y exporta el reporte', async ({ page }) => {
   const errores = await abrir(page)
-  await page.getByRole('button', { name: 'Ejemplos' }).click()
-  await page.getByRole('button', { name: /Dos cintas/ }).click()
-  await expect(page.locator('.mensaje.aviso, .mensaje.error')).toHaveCount(0)
-  await expect(await simularHastaElFinal(page)).toHaveText('M acepta w')
-  await expect(page.locator('.config-grande').first()).toContainText('(0011⊔qaccept, $qacceptxx⊔)')
+  await cargar(page, 'ejemplos/reconocedora-luhn.yaml')
+  await expect(editor(page, 'Gramática · componentes')).toHaveValue(/M = \(Q, Σ, Γ, δ, c0, ⊔, F\)[\s\S]*caché = sí/)
+  await expect(page.getByRole('checkbox', { name: 'Caché [q, m]' })).toBeChecked()
+  await expect(page.locator('.mensaje.error')).toHaveCount(0)
 
-  const cintas = page.getByRole('group', { name: 'Cinta que muestra la máquina' })
-  await expect(cintas.getByRole('button')).toHaveCount(2)
-  await cintas.getByRole('button', { name: '2' }).click()
-  await expect(cintas.getByRole('button', { name: '2' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(await simularHastaElFinal(page)).toHaveText('M acepta w')
+  const cadenas = page.locator('.lista-cadenas .cadena')
+  await expect(cadenas).toHaveCount(4)
+  await expect(page.locator('.lista-cadenas .veredicto')).toHaveText(['acepta', 'acepta', 'rechaza', 'rechaza'])
+  await cadenas.nth(2).click()
+  await page.keyboard.press('End')
+  await expect(page.locator('.resultado-titulo')).toHaveText('M rechaza w')
+  await expect(page.locator('.tarjeta.resultado')).toContainText('no está definida: M se detiene')
+
+  const descarga = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Exportar .txt', exact: true }).click()
+  const exportado = readFileSync(await (await descarga).path(), 'utf8')
+  const { texto } = yamlAEspecificacion(readFileSync(ruta('ejemplos/reconocedora-luhn.yaml'), 'utf8'), 'reconocedora-luhn.yaml')
+  const v = verificar(separarEspecificacion(texto))
+  expect(sinFecha(exportado)).toBe(sinFecha(reporteATexto(v, simularCadenas(v.maquina, v.cadenas))))
   expect(errores).toEqual([])
+})
+
+test('El interruptor de caché cambia la especificación y se puede deshacer', async ({ page }) => {
+  await abrir(page)
+  await cargar(page, 'ejemplos/inciso-b-acepta.txt')
+  const componentes = editor(page, 'Gramática · componentes')
+  const interruptor = page.getByRole('checkbox', { name: 'Caché [q, m]' })
+  await expect(interruptor).not.toBeChecked()
+  await interruptor.check()
+  await expect(componentes).toHaveValue(/caché = sí$/)
+  await expect(await simularHastaElFinal(page)).toHaveText('M acepta w')
+  await expect(page.locator('.config-grande').first()).toContainText('[qaccept, ⊔]')
+
+  await expect(page.getByRole('button', { name: 'Guardar .yaml' })).toBeDisabled()
+  await interruptor.uncheck()
+  await expect(componentes).not.toHaveValue(/caché/)
+})
+
+test('Guarda en YAML una máquina (q₀, ⊔, F)', async ({ page }) => {
+  await abrir(page)
+  await page.getByRole('button', { name: 'Ejemplos' }).click()
+  await page.getByRole('button', { name: /Alteradora/ }).click()
+  const descarga = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Guardar .yaml' }).click()
+  const yaml = readFileSync(await (await descarga).path(), 'utf8')
+  expect(yaml).toContain("final: 'q6'")
+  expect(yaml).toContain('simulation_strings:')
+  await expect(await simularHastaElFinal(page)).toHaveText('M acepta w')
+  await expect(page.locator('.tarjeta.resultado')).toContainText('Contenido de la cinta al terminar: baaba')
 })
 
 test('Las tres vistas de la máquina 3D funcionan', async ({ page }) => {
