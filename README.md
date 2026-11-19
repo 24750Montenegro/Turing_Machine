@@ -2,6 +2,8 @@
 
 Simulador de máquinas de Turing deterministas de una cinta. Lee la descripción formal de la máquina (un `.yaml` con el formato del proyecto o un `.txt` con la notación de clase), simula cada cadena de entrada y muestra las descripciones instantáneas (IDs) paso a paso, con el resultado aceptada / rechazada.
 
+El sistema está desplegado en [turing.jfmonte.com](https://turing.jfmonte.com).
+
 ## Video de demostración
 
 [Ver video](https://youtu.be/LIkvBwZ3q38)
