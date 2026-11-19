@@ -2,19 +2,20 @@ export const BLANCO = '⊔'
 export const IZQUIERDA = 'L'
 export const DERECHA = 'R'
 export const QUIETO = 'S'
-export const MOVIMIENTOS = [IZQUIERDA, DERECHA]
-export const MOVIMIENTOS_CINTAS = [IZQUIERDA, DERECHA, QUIETO]
+
+// sipser: (q₀, qaccept, qreject), cinta con extremo izquierdo, L/R.
+// hopcroft: (q₀, ⊔, F), cinta infinita, L/R/S; acepta en F y rechaza si no hay transición.
+export const MODELOS = { sipser: 'sipser', hopcroft: 'hopcroft' }
+
+export const movimientosDe = (modelo) => (modelo === MODELOS.hopcroft ? [IZQUIERDA, DERECHA, QUIETO] : [IZQUIERDA, DERECHA])
 
 const SUBINDICES = '₀₁₂₃₄₅₆₇₈₉'
-const SUPERINDICES = '⁰¹²³⁴⁵⁶⁷⁸⁹'
 
 export const normalizarSimbolo = (s) => (s === '_' ? BLANCO : s)
 
 export const normalizarEstado = (q) => q.replace(/[₀-₉]/g, (d) => String(SUBINDICES.indexOf(d)))
 
 export const subindice = (n) => [...String(n)].map((d) => SUBINDICES[d] ?? d).join('')
-
-export const superindice = (n) => [...String(n)].map((d) => SUPERINDICES[d] ?? d).join('')
 
 export function conSubindice(nombre) {
   const m = /^(\D+)(\d+)$/.exec(nombre)
@@ -28,15 +29,21 @@ export function partesEstado(q) {
 
 export const conjunto = (elementos, f = String) => `{${elementos.map(f).join(', ')}}`
 
-// Con una cinta, a, c y mov son un símbolo cada uno; con k cintas, leidos, escritos y movs tienen k elementos.
-export const piezas = (t) => ({ leidos: t.leidos ?? [t.a], escritos: t.escritos ?? [t.c], movs: t.movs ?? [t.mov] })
+export const conCache = (t) => t.m !== undefined
+
+export const estadoATexto = (q, m, f = String) => (m === undefined ? f(q) : `[${f(q)}, ${m}]`)
 
 export function transicionATexto(t, f = String) {
-  const { leidos, escritos, movs } = piezas(t)
-  return `δ(${[f(t.q), ...leidos].join(', ')}) = (${[f(t.qj), ...escritos, ...movs].join(', ')})`
+  return `δ(${estadoATexto(t.q, t.m, f)}, ${t.a}) = (${estadoATexto(t.qj, t.n, f)}, ${t.c}, ${t.mov})`
 }
 
-export function firmaDelta(k = 1) {
-  const p = k === 1 ? '' : superindice(k)
-  return `δ: Q × Γ${p} → Q × Γ${p} × {${k === 1 ? 'L, R' : 'L, R, S'}}${p}`
+export function firmaDelta({ modelo = MODELOS.sipser, cache = false } = {}) {
+  const estados = cache ? '(Q × Γ)' : 'Q'
+  return `δ: ${estados} × Γ → ${estados} × Γ × {${movimientosDe(modelo).join(', ')}}`
+}
+
+export function tuplaATexto(M, f = String) {
+  return M.modelo === MODELOS.hopcroft
+    ? `${f(M.nombre)} = (Q, Σ, Γ, δ, ${f(M.q0)}, ${BLANCO}, F)`
+    : `${f(M.nombre)} = (Q, Σ, Γ, δ, ${f(M.q0)}, ${f(M.qaccept)}, ${f(M.qreject)})`
 }

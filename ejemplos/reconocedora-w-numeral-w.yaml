@@ -1,0 +1,212 @@
+---
+# MT reconocedora: { w#w | w ∈ {a, b}* }. La caché guarda el símbolo que se compara.
+q_states:
+  q_list:
+  - 'q0'
+  - 'q1'
+  - 'q2'
+  - 'q3'
+  - 'q4'
+  - 'q5'
+  - 'q6'
+  initial: 'q0'
+  final: 'q6'
+alphabet:
+- a
+- b
+- "#"
+tape_alphabet:
+- X
+-
+delta:
+# q0: guarda el símbolo en caché y lo marca
+- params:
+    initial_state: 'q0'
+    mem_cache_value:
+    tape_input: a
+  output:
+    final_state: 'q1'
+    mem_cache_value: a
+    tape_output: X
+    tape_displacement: R
+- params:
+    initial_state: 'q0'
+    mem_cache_value:
+    tape_input: b
+  output:
+    final_state: 'q1'
+    mem_cache_value: b
+    tape_output: X
+    tape_displacement: R
+- params:
+    initial_state: 'q0'
+    mem_cache_value:
+    tape_input: "#"
+  output:
+    final_state: 'q4'
+    mem_cache_value:
+    tape_output: "#"
+    tape_displacement: R
+# q1: avanza hasta # sin cambiar la caché
+- params:
+    initial_state: 'q1'
+    mem_cache_value: a
+    tape_input: a
+  output:
+    final_state: 'q1'
+    mem_cache_value: a
+    tape_output: a
+    tape_displacement: R
+- params:
+    initial_state: 'q1'
+    mem_cache_value: a
+    tape_input: b
+  output:
+    final_state: 'q1'
+    mem_cache_value: a
+    tape_output: b
+    tape_displacement: R
+- params:
+    initial_state: 'q1'
+    mem_cache_value: a
+    tape_input: "#"
+  output:
+    final_state: 'q2'
+    mem_cache_value: a
+    tape_output: "#"
+    tape_displacement: R
+- params:
+    initial_state: 'q1'
+    mem_cache_value: b
+    tape_input: a
+  output:
+    final_state: 'q1'
+    mem_cache_value: b
+    tape_output: a
+    tape_displacement: R
+- params:
+    initial_state: 'q1'
+    mem_cache_value: b
+    tape_input: b
+  output:
+    final_state: 'q1'
+    mem_cache_value: b
+    tape_output: b
+    tape_displacement: R
+- params:
+    initial_state: 'q1'
+    mem_cache_value: b
+    tape_input: "#"
+  output:
+    final_state: 'q2'
+    mem_cache_value: b
+    tape_output: "#"
+    tape_displacement: R
+# q2: salta las X y compara con la caché
+- params:
+    initial_state: 'q2'
+    mem_cache_value: a
+    tape_input: X
+  output:
+    final_state: 'q2'
+    mem_cache_value: a
+    tape_output: X
+    tape_displacement: R
+- params:
+    initial_state: 'q2'
+    mem_cache_value: a
+    tape_input: a
+  output:
+    final_state: 'q3'
+    mem_cache_value:
+    tape_output: X
+    tape_displacement: L
+- params:
+    initial_state: 'q2'
+    mem_cache_value: b
+    tape_input: X
+  output:
+    final_state: 'q2'
+    mem_cache_value: b
+    tape_output: X
+    tape_displacement: R
+- params:
+    initial_state: 'q2'
+    mem_cache_value: b
+    tape_input: b
+  output:
+    final_state: 'q3'
+    mem_cache_value:
+    tape_output: X
+    tape_displacement: L
+# q3: regresa hasta #
+- params:
+    initial_state: 'q3'
+    mem_cache_value:
+    tape_input: X
+  output:
+    final_state: 'q3'
+    mem_cache_value:
+    tape_output: X
+    tape_displacement: L
+- params:
+    initial_state: 'q3'
+    mem_cache_value:
+    tape_input: "#"
+  output:
+    final_state: 'q5'
+    mem_cache_value:
+    tape_output: "#"
+    tape_displacement: L
+# q5: regresa hasta la última X de la izquierda
+- params:
+    initial_state: 'q5'
+    mem_cache_value:
+    tape_input: a
+  output:
+    final_state: 'q5'
+    mem_cache_value:
+    tape_output: a
+    tape_displacement: L
+- params:
+    initial_state: 'q5'
+    mem_cache_value:
+    tape_input: b
+  output:
+    final_state: 'q5'
+    mem_cache_value:
+    tape_output: b
+    tape_displacement: L
+- params:
+    initial_state: 'q5'
+    mem_cache_value:
+    tape_input: X
+  output:
+    final_state: 'q0'
+    mem_cache_value:
+    tape_output: X
+    tape_displacement: R
+# q4: a la derecha de # solo deben quedar X
+- params:
+    initial_state: 'q4'
+    mem_cache_value:
+    tape_input: X
+  output:
+    final_state: 'q4'
+    mem_cache_value:
+    tape_output: X
+    tape_displacement: R
+- params:
+    initial_state: 'q4'
+    mem_cache_value:
+    tape_input:
+  output:
+    final_state: 'q6'
+    mem_cache_value:
+    tape_output:
+    tape_displacement: S
+simulation_strings:
+- aab#aab
+- abba#abba
+- abbababa#aba
+- abab#abba

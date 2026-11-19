@@ -1,8 +1,8 @@
 import { analizarDefinicion, analizarTransiciones, esEstadoValido, esSimboloValido } from './parser.js'
-import { MOVIMIENTOS, MOVIMIENTOS_CINTAS, normalizarEstado, normalizarSimbolo, piezas, transicionATexto } from './notacion.js'
+import { BLANCO, MODELOS, movimientosDe, normalizarEstado, normalizarSimbolo, transicionATexto } from './notacion.js'
 
-const ETIQUETAS = { Q: 'Q', Sigma: 'Σ', Gamma: 'Γ' }
-const RE_ETIQUETA = /^\s*(Q|Σ|Sigma|Γ|Gamma)\s*=/
+const ETIQUETAS = { Q: 'Q', Sigma: 'Σ', Gamma: 'Γ', F: 'F' }
+const RE_ETIQUETA = /^\s*(Q|Σ|Sigma|Γ|Gamma|F)\s*=/
 const ROLES = { q0: 'inicial', qaccept: 'de aceptación', qreject: 'de rechazo' }
 
 const exito = (textos) => ({ textos })
@@ -37,7 +37,9 @@ function leer(textos) {
   }
 }
 
-const rolesDe = (def) => ({ q0: def.q0, qaccept: def.qaccept, qreject: def.qreject })
+const esHopcroft = (def) => def.modelo === MODELOS.hopcroft
+
+const rolesDe = (def) => (esHopcroft(def) ? { q0: def.q0 } : { q0: def.q0, qaccept: def.qaccept, qreject: def.qreject })
 
 function escribirConjunto(textos, def, campo, elementos) {
   const contenido = (etiqueta) => `${etiqueta} = {${elementos.join(', ')}}`
@@ -50,9 +52,10 @@ function escribirConjunto(textos, def, campo, elementos) {
 function escribirRoles(textos, def, roles) {
   let definicion = textos.definicion
   if (def.lineas.tupla) {
-    definicion = reescribir(definicion, def.lineas.tupla, `${def.nombre} = (Q, Σ, Γ, δ, ${roles.q0}, ${roles.qaccept}, ${roles.qreject})`)
+    const resto = esHopcroft(def) ? `${BLANCO}, F` : `${roles.qaccept}, ${roles.qreject}`
+    definicion = reescribir(definicion, def.lineas.tupla, `${def.nombre} = (Q, Σ, Γ, δ, ${roles.q0}, ${resto})`)
   }
-  for (const campo of Object.keys(ROLES)) {
+  for (const campo of Object.keys(roles)) {
     const numero = def.lineas.claves[campo]
     if (numero) definicion = reescribir(definicion, numero, `${campo} = ${roles[campo]}`)
     else if (!def.lineas.tupla && roles[campo]) definicion = agregarAlFinal(definicion, `${campo} = ${roles[campo]}`)
@@ -88,6 +91,7 @@ export function renombrarEstado(textos, viejo, nombre) {
   if (error) return fallo(error)
 
   let resultado = escribirConjunto(textos, def, 'Q', def.Q.map((x) => (x === viejo ? q : x)))
+  if (def.F?.includes(viejo)) resultado = escribirConjunto(resultado, def, 'F', def.F.map((x) => (x === viejo ? q : x)))
   const roles = rolesDe(def)
   if (Object.values(roles).includes(viejo)) {
     for (const campo of Object.keys(roles)) if (roles[campo] === viejo) roles[campo] = q
@@ -105,14 +109,20 @@ export function eliminarEstado(textos, q) {
   const { def, transiciones } = leer(textos)
   const rol = Object.entries(rolesDe(def)).find(([, valor]) => valor === q)?.[0]
   if (rol) return fallo(`${q} es el estado ${ROLES[rol]}; asigna ese papel a otro estado antes de eliminarlo`)
-  const resultado = escribirConjunto(textos, def, 'Q', def.Q.filter((x) => x !== q))
+  let resultado = escribirConjunto(textos, def, 'Q', def.Q.filter((x) => x !== q))
+  if (def.F?.includes(q)) resultado = escribirConjunto(resultado, def, 'F', def.F.filter((x) => x !== q))
   const lineas = transiciones.filter((t) => t.q === q || t.qj === q).map((t) => t.linea)
   return exito({ ...resultado, transiciones: quitarLineas(resultado.transiciones, lineas) })
 }
 
+// rol "final" agrega o quita q de F.
 export function asignarRol(textos, rol, q) {
   const { def } = leer(textos)
   if (!def.Q?.includes(q)) return fallo(`${q} no pertenece a Q`)
+  if (rol === 'final') {
+    const F = def.F ?? []
+    return exito(escribirConjunto(textos, def, 'F', F.includes(q) ? F.filter((x) => x !== q) : [...F, q]))
+  }
   const roles = rolesDe(def)
   if (rol === 'qaccept' && roles.qreject === q) return fallo(`${q} ya es el estado de rechazo y qreject ≠ qaccept`)
   if (rol === 'qreject' && roles.qaccept === q) return fallo(`${q} ya es el estado de aceptación y qreject ≠ qaccept`)
@@ -120,26 +130,41 @@ export function asignarRol(textos, rol, q) {
   return exito(escribirRoles(textos, def, roles))
 }
 
+export function cambiarCache(textos, activa) {
+  const { def } = leer(textos)
+  const numero = def.lineas.cache
+  if (activa) {
+    if (numero) return exito({ ...textos, definicion: reescribir(textos.definicion, numero, 'caché = sí') })
+    return exito({ ...textos, definicion: agregarAlFinal(textos.definicion, 'caché = sí') })
+  }
+  return exito(numero ? { ...textos, definicion: quitarLineas(textos.definicion, [numero]) } : textos)
+}
+
 export function guardarTransicion(textos, datos, lineaOriginal = null) {
   const { def, transiciones } = leer(textos)
   if (!def.Q || !def.Gamma) return fallo('Primero define Q y Γ en la configuración')
-  const partes = piezas(datos)
-  const leidos = partes.leidos.map((s) => normalizarSimbolo(s.trim()))
-  const escritos = partes.escritos.map((s) => normalizarSimbolo(s.trim()))
-  const { movs } = partes
-  const t = { q: normalizarEstado(datos.q), a: leidos.join(''), qj: normalizarEstado(datos.qj), c: escritos.join(''), mov: movs.join(''), leidos, escritos, movs }
-  const k = def.cintas
+  const limpio = (s) => normalizarSimbolo((s ?? '').trim())
+  const t = {
+    q: normalizarEstado(datos.q),
+    a: limpio(datos.a),
+    qj: normalizarEstado(datos.qj),
+    c: limpio(datos.c),
+    mov: datos.mov,
+    ...(def.cache ? { m: limpio(datos.m) || BLANCO, n: limpio(datos.n) || BLANCO } : {}),
+  }
+  const parada = esHopcroft(def) ? def.F ?? [] : [def.qaccept, def.qreject]
+  const movimientos = movimientosDe(def.modelo)
   if (!def.Q.includes(t.q) || !def.Q.includes(t.qj)) return fallo('Los estados de la transición deben pertenecer a Q')
-  if (t.q === def.qaccept || t.q === def.qreject) return fallo('Los estados de parada no producen más configuraciones: no pueden tener transiciones de salida')
-  if ([leidos, escritos, movs].some((xs) => xs.length !== k)) return fallo(`M tiene ${k} cinta(s): la transición debe leer, escribir y mover en cada una`)
-  if (k === 1 && !MOVIMIENTOS.includes(t.mov)) return fallo('El movimiento debe ser L o R')
-  if (k > 1 && !movs.every((d) => MOVIMIENTOS_CINTAS.includes(d))) return fallo('Cada movimiento debe ser L, R o S')
-  for (const s of [...leidos, ...escritos]) if (!esSimboloValido(s)) return fallo(`"${s}" no es un símbolo válido: debe ser un solo carácter`)
+  if (parada.includes(t.q)) return fallo('Los estados de parada no producen más configuraciones: no pueden tener transiciones de salida')
+  if (!movimientos.includes(t.mov)) return fallo(`El movimiento debe ser ${movimientos.join(', ').replace(/, (\w)$/, ' o $1')}`)
+  const simbolos = [t.a, t.c, ...(def.cache ? [t.m, t.n] : [])]
+  for (const s of simbolos) if (!esSimboloValido(s)) return fallo(`"${s}" no es un símbolo válido: debe ser un solo carácter`)
 
-  const choque = transiciones.find((x) => x.q === t.q && x.a === t.a && x.linea !== lineaOriginal)
-  if (choque) return fallo(`δ(${[t.q, ...leidos].join(', ')}) ya está definida en la línea ${choque.linea}: δ debe ser una función`)
+  const mismaLectura = (x) => x.q === t.q && x.a === t.a && (!def.cache || (x.m ?? BLANCO) === t.m)
+  const choque = transiciones.find((x) => mismaLectura(x) && x.linea !== lineaOriginal)
+  if (choque) return fallo(`δ(${def.cache ? `[${t.q}, ${t.m}]` : t.q}, ${t.a}) ya está definida en la línea ${choque.linea}: δ debe ser una función`)
 
-  const nuevos = [...new Set([...leidos, ...escritos])].filter((s) => !def.Gamma.includes(s))
+  const nuevos = [...new Set(simbolos)].filter((s) => !def.Gamma.includes(s))
   const resultado = nuevos.length ? escribirConjunto(textos, def, 'Gamma', [...def.Gamma, ...nuevos]) : textos
   const texto = transicionATexto(t)
   if (lineaOriginal) return exito({ ...resultado, transiciones: reescribir(resultado.transiciones, lineaOriginal, texto) })

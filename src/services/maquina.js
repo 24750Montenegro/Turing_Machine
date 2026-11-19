@@ -1,12 +1,21 @@
-import { BLANCO, DERECHA, IZQUIERDA, QUIETO, conSubindice } from './notacion.js'
+import { BLANCO, DERECHA, IZQUIERDA, MODELOS, QUIETO, conSubindice, estadoATexto } from './notacion.js'
 
-export const clave = (q, a) => `${q}\u0000${a}`
+export const clave = (q, a, m) => (m === undefined ? `${q}\u0000${a}` : `${q}\u0000${m}\u0000${a}`)
 
-export const esParada = (M, q) => q === M.qaccept || q === M.qreject
+export const esHopcroft = (M) => M.modelo === MODELOS.hopcroft
 
-export const numeroCintas = (M) => M.cintas ?? 1
+export const esAceptacion = (M, q) => M.F.includes(q)
 
-export const delta = (M, q, a) => M.delta.get(clave(q, a)) ?? (numeroCintas(M) > 1 ? haciaRechazo(M, q, a) : undefined)
+export const esRechazo = (M, q) => M.qreject != null && q === M.qreject
+
+export const esParada = (M, q) => esAceptacion(M, q) || esRechazo(M, q)
+
+// Sipser con caché: lo no definido va a qreject. Hopcroft: sin transición M se detiene.
+export function delta(M, q, a, m) {
+  const t = M.delta.get(clave(q, a, M.cache ? m ?? BLANCO : undefined))
+  if (t || esHopcroft(M) || !M.cache) return t
+  return { q, m, a, qj: M.qreject, n: m, c: a, mov: DERECHA, implicita: true }
+}
 
 export const simboloLeido = ({ v }) => v[0] ?? BLANCO
 
@@ -14,47 +23,32 @@ export const cinta = ({ u, v }) => u + v
 
 export const posicionCabeza = ({ u }) => u.length
 
-// Una cinta: C = uqv. Con k cintas: C = (u₁qv₁, …, uₖqvₖ), un mismo estado y una cabeza por cinta.
-export const cintasDe = (C) => C.cintas ?? [{ u: C.u, v: C.v }]
+export const contenidoCinta = (C) => cinta(C).replace(new RegExp(`^${BLANCO}+|${BLANCO}+$`, 'g'), '')
 
 export function configuracionInicial(M, w) {
   const v = w === '' && !esParada(M, M.q0) ? BLANCO : w
-  if (numeroCintas(M) === 1) return { u: '', q: M.q0, v }
-  const vacia = esParada(M, M.q0) ? '' : BLANCO
-  return { q: M.q0, cintas: [{ u: '', v }, ...Array.from({ length: numeroCintas(M) - 1 }, () => ({ u: '', v: vacia }))] }
+  return M.cache ? { u: '', q: M.q0, m: BLANCO, v } : { u: '', q: M.q0, v }
 }
 
-// Reglas de "produce" sobre una cinta uaqᵢbv, donde b = v[0] y δ escribe c y mueve en la dirección mov.
-function moverCinta({ u, v }, c, mov, haciaParada) {
+function moverCinta({ u, v }, c, mov, haciaParada, infinita) {
   const resto = v.slice(1)
   if (mov === IZQUIERDA) {
-    if (u === '') return { cinta: { u: '', v: c + resto }, regla: 'borde' }
-    return { cinta: { u: u.slice(0, -1), v: u.slice(-1) + c + resto }, regla: 'izquierda' }
+    if (u === '') return infinita ? { u: '', v: BLANCO + c + resto, regla: 'extension' } : { u: '', v: c + resto, regla: 'borde' }
+    return { u: u.slice(0, -1), v: u.slice(-1) + c + resto, regla: 'izquierda' }
   }
-  if (mov === QUIETO) return { cinta: { u, v: c + resto }, regla: 'quieta' }
+  if (mov === QUIETO) return { u, v: c + resto, regla: 'quieta' }
   const alFinal = resto === '' && !haciaParada
-  return { cinta: { u: u + c, v: alFinal ? BLANCO : resto }, regla: alFinal ? 'final' : 'derecha' }
+  return { u: u + c, v: alFinal ? BLANCO : resto, regla: alFinal ? 'final' : 'derecha' }
 }
 
-// Relación "C1 produce C2" tal como se definió en clase.
+// null si C es de parada o no hay transición.
 export function produce(M, C) {
   if (esParada(M, C.q)) return null
-  if (C.cintas) return produceEnCintas(M, C)
-  const t = delta(M, C.q, simboloLeido(C))
-  const { cinta: nueva, regla } = moverCinta(C, t.c, t.mov, esParada(M, t.qj))
-  return { configuracion: { u: nueva.u, q: t.qj, v: nueva.v }, transicion: t, regla }
-}
-
-function produceEnCintas(M, C) {
-  const t = delta(M, C.q, C.cintas.map(simboloLeido).join(''))
-  const movidas = C.cintas.map((c, i) => moverCinta(c, t.escritos[i], t.movs[i], esParada(M, t.qj)))
-  return { configuracion: { q: t.qj, cintas: movidas.map((m) => m.cinta) }, transicion: t, regla: movidas.map((m) => m.regla) }
-}
-
-// Con k cintas no se enumeran las |Γ|ᵏ combinaciones: una sin definir va a qreject sin cambiar nada.
-function haciaRechazo(M, q, a) {
-  const leidos = [...a]
-  return { q, a, qj: M.qreject, c: a, mov: DERECHA.repeat(leidos.length), leidos, escritos: leidos, movs: leidos.map(() => DERECHA), implicita: true }
+  const t = delta(M, C.q, simboloLeido(C), C.m)
+  if (!t) return null
+  const { u, v, regla } = moverCinta(C, t.c, t.mov, esParada(M, t.qj), esHopcroft(M))
+  const configuracion = M.cache ? { u, q: t.qj, m: t.n ?? BLANCO, v } : { u, q: t.qj, v }
+  return { configuracion, transicion: t, regla }
 }
 
 export const REGLAS = {
@@ -66,6 +60,10 @@ export const REGLAS = {
     nombre: 'Extremo izquierdo de la cinta',
     forma: 'qᵢbv produce qⱼcv si δ(qᵢ, b) = (qⱼ, c, L)',
   },
+  extension: {
+    nombre: 'Movimiento a la izquierda del inicio (cinta infinita a ambos lados)',
+    forma: 'qᵢbv produce qⱼ⊔cv si δ(qᵢ, b) = (qⱼ, c, L)',
+  },
   derecha: {
     nombre: 'Movimiento hacia la derecha',
     forma: 'uaqᵢbv produce uacqⱼv si δ(qᵢ, b) = (qⱼ, c, R)',
@@ -75,12 +73,22 @@ export const REGLAS = {
     forma: 'uaqᵢb produce uacqⱼ⊔ si δ(qᵢ, b) = (qⱼ, c, R), pues uacqⱼ equivale a uacqⱼ⊔',
   },
   quieta: {
-    nombre: 'La cabeza no se mueve (S, solo con varias cintas)',
-    forma: 'uqᵢbv produce uqⱼcv en la cinta cuyo movimiento es S',
+    nombre: 'La cabeza no se mueve',
+    forma: 'uqᵢbv produce uqⱼcv si δ(qᵢ, b) = (qⱼ, c, S)',
   },
 }
 
+// Rellena con ⊔ a la izquierda para que cada celda conserve su índice aunque la cinta crezca.
+export function configuracionesAlineadas(sim) {
+  const extensiones = []
+  let n = 0
+  for (const p of sim.pasos) extensiones.push((n += p.regla === 'extension' ? 1 : 0))
+  return sim.pasos.map((p, i) => {
+    const relleno = BLANCO.repeat(n - extensiones[i])
+    return relleno ? { ...p.configuracion, u: relleno + p.configuracion.u } : p.configuracion
+  })
+}
+
 export function configuracionATexto(C, f = conSubindice) {
-  if (!C.cintas) return C.u + f(C.q) + C.v
-  return `(${C.cintas.map(({ u, v }) => u + f(C.q) + v).join(', ')})`
+  return C.u + estadoATexto(C.q, C.m, f) + C.v
 }

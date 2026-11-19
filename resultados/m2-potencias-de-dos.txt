@@ -1,6 +1,6 @@
 SIMULACIÓN DE UNA MÁQUINA DE TURING DETERMINISTA
 ================================================
-Generado: 14/11/2026, 1:44:10 p. m.
+Generado: 17/11/2026, 10:42:41 a. m.
 
 
 1. Especificación
@@ -83,3 +83,4 @@ Pasos ejecutados: 21
 
 C₂₂ = ⊔xxx⊔qaccept es una configuración de aceptación (su estado es qaccept).
 M acepta w, por lo tanto w ∈ L(M).
+Contenido de la cinta al terminar: xxx
