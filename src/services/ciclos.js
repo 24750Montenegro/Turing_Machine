@@ -1,10 +1,9 @@
-import { BLANCO, IZQUIERDA, QUIETO, piezas } from './notacion.js'
-import { cintasDe, esParada } from './maquina.js'
+import { BLANCO, IZQUIERDA, QUIETO } from './notacion.js'
+import { esParada } from './maquina.js'
 
 const RE_SOLO_BLANCOS = new RegExp(`^${BLANCO}*$`)
 const PASO = { [IZQUIERDA]: -1, [QUIETO]: 0 }
 
-// Observa la secuencia de configuraciones ya producida; no forma parte de M ni de su cinta.
 export function crearDetectorCiclos(M, inicial) {
   const vistas = new Map([[huella(inicial), 0]])
   const enBlanco = new Map()
@@ -17,22 +16,19 @@ export function crearDetectorCiclos(M, inicial) {
     if (vistas.has(h)) return { tipo: 'repeticion', desde: vistas.get(h), hasta: i }
     vistas.set(h, i)
 
-    const { movs } = piezas(paso.transicion)
-    const intentos = cintasDe(anterior).map(({ u }, k) => u.length + (PASO[movs[k]] ?? 1))
-    for (const r of enBlanco.values()) r.minimos = r.minimos.map((m, k) => Math.min(m, intentos[k]))
+    // Si la cinta crece a la izquierda el intento es −1 e invalida los registros previos.
+    const intento = anterior.u.length + (PASO[paso.transicion.mov] ?? 1)
+    for (const r of enBlanco.values()) r.minimo = Math.min(r.minimo, intento)
 
-    const cintas = cintasDe(C)
-    if (cintas.every(({ v }) => RE_SOLO_BLANCOS.test(v))) {
-      const cabezas = cintas.map(({ u }) => u.length)
-      const r = enBlanco.get(C.q)
-      if (r && r.minimos.every((m, k) => m >= r.cabezas[k])) {
-        const desplazamientos = cabezas.map((c, k) => c - r.cabezas[k])
-        return { tipo: 'blancos', desde: r.paso, hasta: i, desplazamiento: C.cintas ? desplazamientos : desplazamientos[0] }
-      }
-      enBlanco.set(C.q, { paso: i, cabezas, minimos: cabezas })
+    if (RE_SOLO_BLANCOS.test(C.v)) {
+      const estado = `${C.q}\u0000${C.m ?? ''}`
+      const cabeza = C.u.length
+      const r = enBlanco.get(estado)
+      if (r && r.minimo >= r.cabeza) return { tipo: 'blancos', desde: r.paso, hasta: i, desplazamiento: cabeza - r.cabeza }
+      enBlanco.set(estado, { paso: i, cabeza, minimo: cabeza })
     }
     return null
   }
 }
 
-const huella = (C) => [C.q, ...cintasDe(C).flatMap(({ u, v }) => [u, v])].join('\u0000')
+const huella = (C) => [C.q, C.m ?? '', C.u, C.v].join('\u0000')

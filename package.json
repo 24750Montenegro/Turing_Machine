@@ -11,12 +11,15 @@
     "simular": "node scripts/simular.mjs",
     "diagrama": "node scripts/diagrama.mjs",
     "e2e": "playwright test",
-    "entrega": "node scripts/entrega.mjs"
+    "entrega": "node scripts/entrega.mjs",
+    "luhn": "node scripts/generar-luhn.mjs",
+    "resultados": "node scripts/resultados.mjs"
   },
   "dependencies": {
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "three": "^0.187.0"
+    "three": "^0.187.0",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",

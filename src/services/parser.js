@@ -1,19 +1,25 @@
-import { normalizarEstado, normalizarSimbolo } from './notacion.js'
+import { BLANCO, MODELOS, normalizarEstado, normalizarSimbolo } from './notacion.js'
 
-const RE_CONJUNTO = /^(Q|Σ|Sigma|Γ|Gamma)\s*=\s*\{(.*)\}$/
+const RE_CONJUNTO = /^(Q|Σ|Sigma|Γ|Gamma|F)\s*=\s*\{(.*)\}$/
 const RE_DISTINGUIDO = /^(q0|q₀|qaccept|qreject)\s*=\s*(\S+)$/
 const RE_TUPLA = /^([^\s=]+)\s*=\s*\((.*)\)$/
-const RE_TRANSICION = /^(?:δ|delta)\s*\(([^()]*)\)\s*(?:=|→|->)\s*\(([^()]*)\)$/i
+const RE_TRANSICION = /^(?:δ|delta)\s*\((.*)\)\s*(?:=|→|->)\s*\((.*)\)$/i
 const RE_ES_TRANSICION = /^(?:δ|delta)\s*\(/i
 const RE_ENTRADA = /^w\s*=\s*(.*)$/
 const RE_CINTAS = /^cintas\s*=\s*(\S+)$/i
-const RE_ESTADO = /^[^\s,(){}=]+$/
-const RESERVADOS = new Set([',', '(', ')', '{', '}'])
+const RE_CACHE = /^(?:cach[eé]|memoria)\s*=\s*(\S+)$/i
+const RE_ESTADO = /^[^\s,()[\]{}=]+$/
+const RE_CORCHETE = /^\[([^[\]]*)\]\s*,(.*)$/
+const RESERVADOS = new Set([',', '(', ')', '{', '}', '[', ']'])
+const SI = new Set(['sí', 'si', 'true', '1', 'activada', 'activa'])
+const NO = new Set(['no', 'false', '0', 'desactivada', 'inactiva'])
+const BLANCOS_TUPLA = new Set([BLANCO, '_', 'B'])
 
-const CAMPO_CONJUNTO = { Q: 'Q', Σ: 'Sigma', Sigma: 'Sigma', Γ: 'Gamma', Gamma: 'Gamma' }
-const NOMBRE_CONJUNTO = { Q: 'Q', Sigma: 'Σ', Gamma: 'Γ' }
+const CAMPO_CONJUNTO = { Q: 'Q', Σ: 'Sigma', Sigma: 'Sigma', Γ: 'Gamma', Gamma: 'Gamma', F: 'F' }
+const NOMBRE_CONJUNTO = { Q: 'Q', Sigma: 'Σ', Gamma: 'Γ', F: 'F' }
 const CAMPO_DISTINGUIDO = { q0: 'q0', 'q₀': 'q0', qaccept: 'qaccept', qreject: 'qreject' }
 const NOMBRE_DISTINGUIDO = { q0: 'q₀', qaccept: 'qaccept', qreject: 'qreject' }
+const DE_ESTADOS = new Set(['Q', 'F'])
 
 export const quitarComentario = (linea) => linea.replace(/\/\/.*$/, '').trim()
 
@@ -39,9 +45,18 @@ function crearRegistro(seccion) {
   }
 }
 
+// (…, q₀, qaccept, qreject) -> Sipser; (…, q₀, ⊔, F) -> Hopcroft.
+function leerTupla(partes) {
+  const base = partes.length === 7 && partes[0] === 'Q' &&
+    ['Σ', 'Sigma'].includes(partes[1]) && ['Γ', 'Gamma'].includes(partes[2]) && ['δ', 'delta'].includes(partes[3])
+  if (!base) return null
+  if (BLANCOS_TUPLA.has(partes[5]) && partes[6] === 'F') return { modelo: MODELOS.hopcroft, q0: partes[4] }
+  return { modelo: MODELOS.sipser, q0: partes[4], qaccept: partes[5], qreject: partes[6] }
+}
+
 export function analizarDefinicion(texto) {
   const r = crearRegistro('definicion')
-  const def = { nombre: 'M', Q: null, Sigma: null, Gamma: null, q0: null, qaccept: null, qreject: null, cintas: 1 }
+  const def = { nombre: 'M', modelo: null, Q: null, Sigma: null, Gamma: null, F: null, q0: null, qaccept: null, qreject: null, cache: false }
   const lineas = { claves: {} }
 
   const asignar = (campo, valor, linea) => {
@@ -69,36 +84,40 @@ export function analizarDefinicion(texto) {
       asignar(CAMPO_DISTINGUIDO[m[1]], normalizarEstado(m[2]), linea)
       lineas.claves[CAMPO_DISTINGUIDO[m[1]]] = linea
     } else if ((m = RE_TUPLA.exec(l))) {
-      const partes = m[2].split(',').map((s) => s.trim())
-      const forma = partes.length === 7 && partes[0] === 'Q' &&
-        ['Σ', 'Sigma'].includes(partes[1]) && ['Γ', 'Gamma'].includes(partes[2]) && ['δ', 'delta'].includes(partes[3])
-      if (!forma) {
-        r.error(linea, 'La 7-tupla debe tener la forma M = (Q, Σ, Γ, δ, q₀, qaccept, qreject)')
+      const tupla = leerTupla(m[2].split(',').map((s) => s.trim()))
+      if (!tupla) {
+        r.error(linea, 'La 7-tupla debe tener la forma M = (Q, Σ, Γ, δ, q₀, qaccept, qreject) o M = (Q, Σ, Γ, δ, q₀, ⊔, F)')
         continue
       }
       def.nombre = normalizarEstado(m[1])
+      def.modelo = tupla.modelo
       lineas.tupla = linea
-      asignar('q0', normalizarEstado(partes[4]), linea)
-      asignar('qaccept', normalizarEstado(partes[5]), linea)
-      asignar('qreject', normalizarEstado(partes[6]), linea)
-    } else if ((m = RE_CINTAS.exec(l))) {
-      const k = Number(m[1])
-      if (lineas.cintas) r.error(linea, 'El número de cintas se definió más de una vez')
-      else if (!Number.isInteger(k) || k < 1) r.error(linea, `"${m[1]}" no es un número de cintas válido: debe ser un entero k ≥ 1`)
-      else def.cintas = k
-      lineas.cintas = linea
+      asignar('q0', normalizarEstado(tupla.q0), linea)
+      if (tupla.modelo === MODELOS.sipser) {
+        asignar('qaccept', normalizarEstado(tupla.qaccept), linea)
+        asignar('qreject', normalizarEstado(tupla.qreject), linea)
+      }
+    } else if ((m = RE_CACHE.exec(l))) {
+      const valor = m[1].toLowerCase()
+      if (lineas.cache) r.error(linea, 'La memoria caché se definió más de una vez')
+      else if (SI.has(valor)) def.cache = true
+      else if (!NO.has(valor)) r.error(linea, `"${m[1]}" no es válido: escribe caché = sí o caché = no`)
+      lineas.cache = linea
+    } else if (RE_CINTAS.test(l)) {
+      r.error(linea, 'El simulador es de una sola cinta: quita la línea cintas = k')
     } else if (RE_ES_TRANSICION.test(l)) {
       r.error(linea, 'Las transiciones δ van en la sección de transiciones')
     } else {
-      r.error(linea, `Línea no reconocida: "${l}". Se esperaba la 7-tupla, Q = {…}, Σ = {…}, Γ = {…} o cintas = k`)
+      r.error(linea, `Línea no reconocida: "${l}". Se esperaba la 7-tupla, Q = {…}, Σ = {…}, Γ = {…}, F = {…} o caché = sí`)
     }
   }
+  if (!def.modelo) def.modelo = def.F || (def.q0 && !def.qaccept && !def.qreject) ? MODELOS.hopcroft : MODELOS.sipser
   return { ...def, lineas, errores: r.errores, advertencias: r.advertencias }
 }
 
 function leerConjunto(cuerpo, campo, nombre, linea, r) {
   const crudos = cuerpo.trim() === '' ? [] : cuerpo.split(',').map((s) => s.trim())
-  const esQ = campo === 'Q'
+  const esQ = DE_ESTADOS.has(campo)
   const elementos = []
   for (const crudo of crudos) {
     if (crudo === '') {
@@ -114,45 +133,57 @@ function leerConjunto(cuerpo, campo, nombre, linea, r) {
   return elementos
 }
 
+const separar = (s) => s.split(',').map((x) => x.trim())
+
+function leerTransicion(l) {
+  const m = RE_TRANSICION.exec(l)
+  if (!m) return null
+  const ci = RE_CORCHETE.exec(m[1].trim())
+  const cd = RE_CORCHETE.exec(m[2].trim())
+  if (Boolean(ci) !== Boolean(cd)) return { error: 'si un lado usa [q, m], el otro también' }
+  if (ci) {
+    const [ei, ri, ed, rd] = [separar(ci[1]), separar(ci[2]), separar(cd[1]), separar(cd[2])]
+    if (ei.length !== 2 || ri.length !== 1 || ed.length !== 2 || rd.length !== 2 || [...ei, ...ri, ...ed, ...rd].includes('')) return null
+    return {
+      q: normalizarEstado(ei[0]),
+      m: normalizarSimbolo(ei[1]),
+      a: normalizarSimbolo(ri[0]),
+      qj: normalizarEstado(ed[0]),
+      n: normalizarSimbolo(ed[1]),
+      c: normalizarSimbolo(rd[0]),
+      mov: rd[1].toUpperCase(),
+    }
+  }
+  const [izq, der] = [separar(m[1]), separar(m[2])]
+  if (izq.length !== 2 || der.length !== 3 || [...izq, ...der].includes('')) return null
+  if ([...izq, ...der].some((x) => /[[\]()]/.test(x))) return null
+  return { q: normalizarEstado(izq[0]), a: normalizarSimbolo(izq[1]), qj: normalizarEstado(der[0]), c: normalizarSimbolo(der[1]), mov: der[2].toUpperCase() }
+}
+
 export function analizarTransiciones(texto) {
   const r = crearRegistro('transiciones')
   const transiciones = []
   for (const { texto: l, linea } of lineasUtiles(texto)) {
-    const m = RE_TRANSICION.exec(l)
-    const izq = m?.[1].split(',').map((s) => s.trim())
-    const der = m?.[2].split(',').map((s) => s.trim())
-    const k = izq ? izq.length - 1 : 0
-    if (!m || k < 1 || der.length !== 2 * k + 1 || [...izq, ...der].includes('')) {
-      r.error(linea, `"${l}" no es una transición válida. Formato: δ(qᵢ, b) = (qⱼ, c, L) o δ(qᵢ, b) = (qⱼ, c, R); con k cintas, δ(qᵢ, b₁, …, bₖ) = (qⱼ, c₁, …, cₖ, D₁, …, Dₖ)`)
+    const t = leerTransicion(l)
+    if (!t || t.error) {
+      r.error(linea, `"${l}" no es una transición válida${t?.error ? `: ${t.error}` : ''}. Formato: δ(qᵢ, b) = (qⱼ, c, D) o, con caché, δ([qᵢ, m], b) = ([qⱼ, n], c, D)`)
       continue
     }
-    const leidos = izq.slice(1).map(normalizarSimbolo)
-    const escritos = der.slice(1, k + 1).map(normalizarSimbolo)
-    const movs = der.slice(k + 1).map((d) => d.toUpperCase())
-    transiciones.push({
-      q: normalizarEstado(izq[0]),
-      a: leidos.join(''),
-      qj: normalizarEstado(der[0]),
-      c: escritos.join(''),
-      mov: movs.join(''),
-      leidos,
-      escritos,
-      movs,
-      linea,
-    })
+    transiciones.push({ ...t, linea })
   }
   return { transiciones, errores: r.errores, advertencias: r.advertencias }
 }
 
 export function analizarEntrada(texto) {
   const r = crearRegistro('entrada')
-  const lineas = lineasUtiles(texto)
-  if (lineas.length > 1) r.error(lineas[1].linea, 'Solo se admite una cadena de entrada w')
-  if (lineas.length === 0) return { w: '', errores: r.errores }
-  const m = RE_ENTRADA.exec(lineas[0].texto)
-  let valor = (m ? m[1] : lineas[0].texto).replace(/\s+/g, '')
-  if (valor === 'ε') valor = ''
-  return { w: [...valor].map(normalizarSimbolo).join(''), linea: lineas[0].linea, errores: r.errores }
+  const cadenas = lineasUtiles(texto).map(({ texto: l, linea }) => {
+    const m = RE_ENTRADA.exec(l)
+    let valor = (m ? m[1] : l).replace(/\s+/g, '')
+    if (valor === 'ε') valor = ''
+    return { w: [...valor].map(normalizarSimbolo).join(''), linea }
+  })
+  if (cadenas.length === 0) cadenas.push({ w: '', linea: undefined })
+  return { cadenas, w: cadenas[0].w, linea: cadenas[0].linea, errores: r.errores }
 }
 
 export const SECCIONES = ['definicion', 'transiciones', 'entrada']

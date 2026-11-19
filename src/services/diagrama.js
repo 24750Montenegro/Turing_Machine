@@ -13,29 +13,25 @@ export function aristasDiagrama(M, { incluirImplicitas = false } = {}) {
       ...a,
       etiquetas: grupos.map((g) => g.texto),
       simbolos: grupos.map((g) => g.simbolos),
+      lecturas: grupos.map((g) => g.lecturas),
       implicita: a.transiciones.every((t) => t.implicita),
     }
   })
 }
 
-// Notación de los diagramas de clase: "0 → x, R" escribe x; "0, 1 → R" deja el símbolo igual.
-// Con k cintas cada transición va en su línea: "0,⊔ → 0,$; S,R" o "1,x → R,L" si no cambia ningún símbolo.
+// "0 → x, R" escribe x; "0, 1 → R" deja el símbolo; con caché "[m] a → [n] x, R".
 function agrupar(transiciones, orden) {
-  if (transiciones.some((t) => t.leidos?.length > 1)) {
-    return transiciones.map((t) => ({
-      simbolos: [t.a],
-      texto: `${t.leidos.join(',')} → ${t.c === t.a ? '' : `${t.escritos.join(',')}; `}${t.movs.join(',')}`,
-    }))
-  }
   const grupos = new Map()
   for (const t of transiciones) {
     const escrito = t.c === t.a ? null : t.c
-    const k = `${escrito ?? ''}\u0000${t.mov}`
-    if (!grupos.has(k)) grupos.set(k, { escrito, mov: t.mov, simbolos: [] })
+    const k = `${t.m ?? ''}\u0000${t.n ?? ''}\u0000${escrito ?? ''}\u0000${t.mov}`
+    if (!grupos.has(k)) grupos.set(k, { m: t.m, n: t.n, escrito, mov: t.mov, simbolos: [], lecturas: [] })
     grupos.get(k).simbolos.push(t.a)
+    grupos.get(k).lecturas.push(`${t.m ?? ''}\u0000${t.a}`)
   }
   return [...grupos.values()].map((g) => {
     g.simbolos.sort(orden)
-    return { simbolos: g.simbolos, texto: `${g.simbolos.join(', ')} → ${g.escrito ? `${g.escrito}, ` : ''}${g.mov}` }
+    const [antes, despues] = g.m === undefined ? ['', ''] : [`[${g.m}] `, `[${g.n}] `]
+    return { simbolos: g.simbolos, lecturas: g.lecturas, texto: `${antes}${g.simbolos.join(', ')} → ${despues}${g.escrito ? `${g.escrito}, ` : ''}${g.mov}` }
   })
 }
